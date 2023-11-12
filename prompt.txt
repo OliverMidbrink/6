@@ -1,0 +1,15 @@
+Given the following input data and you biological knowledge surrounding this protein and how it operates in the cell. 
+Think about all the pathways in the cell. Combine all of these. What summurized effect be if you inhibit the provided protein
+in relation to Oct4, Sox2 and Klf4 (OSK). 
+
+-100 means inhibition of the protein will downregulate OSK activity.
+100 means inibition of the protein will upregulate OSK activity.
+
+It needs to be a metabolic/epigenetic regulation change inside the cells. No cell death can occur. 
+It needs to be healthy and little side effects since these proteins will be potential targets for
+medication. 
+
+Also even though it is not mentioned in litterature. Provide an educated guess about the numbers.
+
+Give an answer in the form of three numbers in square brackets.
+
