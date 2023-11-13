@@ -1,4 +1,4 @@
-from download_dlip_rule_of_5_compound_ids import format_seconds
+from download_DLiP_rule_of_5_compound_ids import format_seconds
 import requests, json, os, time, math
 from bs4 import BeautifulSoup
 
@@ -110,7 +110,7 @@ def download_all_rule_of_five_compounds_data(output_filename = "DLiP_rule_of_5_c
     last_file_size = os.path.getsize(output_filename)
 
     compounds_iterated = 0
-    for compound_id in rule_of_5_compound_ids - compound:
+    for compound_id in rule_of_5_compound_ids:
         compounds_iterated += 1
         if not compound_id in compound_data_dict:
             compound_data = get_compound_data(compound_id)
