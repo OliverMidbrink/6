@@ -126,7 +126,7 @@ def download_all_rule_of_five_compounds_data(output_filename = "DLiP_rule_of_5_c
                 projecte_filesize = (os.path.getsize(output_filename) - last_file_size) * len(rule_of_5_compound_ids)
                 last_file_size = os.path.getsize(output_filename)
                 projecte_filesize_str = convert_filesize_to_human_readable(projecte_filesize)
-                print("Downloading and saving data for compound of id {} to file {}. ETA is {}. Projected file size is {}".format(compound_id, output_filename, eta_str, projecte_filesize_str))
+                print("Downloading data {}/{} for compound of id {} to file {}. ETA is {}. Projected file size is {}".format(compounds_iterated, len(new_compound_ids_to_download), compound_id, output_filename, eta_str, projecte_filesize_str))
                 compound_data_dict[compound_id] = compound_data
 
                 save_json(compound_data_dict, output_filename)
