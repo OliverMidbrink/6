@@ -74,5 +74,6 @@ def save_ppi_ids_rule_of_five_to_json_file(filename):
             total_ppi_ids["rule_of_5_compound_ids"] = list(set(list(total_ppi_ids["rule_of_5_compound_ids"])))
             json.dump(total_ppi_ids, file)
 
-save_ppi_ids_rule_of_five_to_json_file("DLiP_PPI_DB_rule_of_5_compound_ids.json")
+if __name__ == "__main__":
+    save_ppi_ids_rule_of_five_to_json_file("DLiP_PPI_DB_rule_of_5_compound_ids.json")
 
