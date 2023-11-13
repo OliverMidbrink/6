@@ -56,6 +56,10 @@ def get_compound_data(compound_id):
             print(f"Request failed with status code: {response.status_code}")
 
         return compound_info_dict
+    except KeyboardInterrupt:
+        print("\nProgram interrupted by user. Exiting.")
+        exit(0)
+
     except:
         print("Could not get human interaction data for compound {}".format(compound_id))
 
@@ -110,12 +114,13 @@ def download_all_rule_of_five_compounds_data(output_filename = "DLiP_rule_of_5_c
     last_file_size = os.path.getsize(output_filename)
 
     compounds_iterated = 0
-    for compound_id in rule_of_5_compound_ids - compound_data_dict.keys():
+    new_compound_ids_to_download = rule_of_5_compound_ids - compound_data_dict.keys()
+    for compound_id in new_compound_ids_to_download:
         compounds_iterated += 1
         if not compound_id in compound_data_dict:
             compound_data = get_compound_data(compound_id)
             if compound_data:
-                eta = (time.time() - last_completion_time) * (len(rule_of_5_compound_ids) - compounds_iterated)
+                eta = (time.time() - last_completion_time) * (len(new_compound_ids_to_download) - compounds_iterated)
                 last_completion_time = time.time()
                 eta_str = format_seconds(eta)
                 projecte_filesize = (os.path.getsize(output_filename) - last_file_size) * (len(rule_of_5_compound_ids) - compounds_iterated)
@@ -126,6 +131,7 @@ def download_all_rule_of_five_compounds_data(output_filename = "DLiP_rule_of_5_c
 
                 save_json(compound_data_dict, output_filename)
         else:
+            last_completion_time = time.time()
             print("Compound data for compound of id {} already saved to {}".format(compound_id, output_filename))
 
     return True
