@@ -144,4 +144,4 @@ def get_all_compound_data(filename):
         except Exception as e:
             print(e)
 
-get_all_compound_data("compound_ppi_inhibitions_1.json")
+get_all_compound_data("iPPI-DB.json")
