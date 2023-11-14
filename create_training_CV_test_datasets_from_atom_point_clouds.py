@@ -1,4 +1,4 @@
-import os
+import os, json
 import glob
 import h5py
 import numpy as np
@@ -108,7 +108,7 @@ def read_hdf5(file_path):
     with h5py.File(file_path, 'r') as h5file:
         return np.array(h5file['atom_coordinates'])
 
-def generate_4channel_cloud_input_data_from_uniprot(protein_atom_point_clouds_folder, uniprot_id, grid_size=(100, 100, 100), num_channels=4):
+def generate_4channel_cloud__data_from_uniprot(uniprot_id, protein_atom_point_clouds_folder=os.path.join("data", "protein_atom_point_clouds"), grid_size=(100, 100, 100), num_channels=4):
     # Only use the first fold of each uniprot
     protein_atom_point_cloud_filename = os.path.join(protein_atom_point_clouds_folder, "AF-{}-F1-model_v4_atom_cloud.hdf5".format(uniprot_id))
     
@@ -128,7 +128,7 @@ def generate_4channel_cloud_input_data_from_uniprot(protein_atom_point_clouds_fo
     yield channels
 
 
-def generate_max_axis_from_uniprot(protein_atom_point_clouds_folder, uniprot_id):
+def calculate_max_axis_from_uniprot(protein_atom_point_clouds_folder, uniprot_id):
     # Only use the first fold of each uniprot
     protein_atom_point_cloud_filename = os.path.join(protein_atom_point_clouds_folder, "AF-{}-F1-model_v4_atom_cloud.hdf5".format(uniprot_id))
     
@@ -186,7 +186,7 @@ def calculate_max_axis_histogram_from_uniprot_id_list(protein_atom_point_clouds_
 
     # Adding a progress bar with tqdm
     for uniprot_id in tqdm(sampled_prot_ids, desc='Processing', unit='uniprot_id'):
-        length = generate_max_axis_from_uniprot(protein_atom_point_clouds_folder, uniprot_id)
+        length = calculate_max_axis_from_uniprot(protein_atom_point_clouds_folder, uniprot_id)
         lengths.append(length)
 
     # Using plotly for the histogram
@@ -205,11 +205,28 @@ def get_dataset_index_simple_split(data_folder_name="protein_atom_point_clouds")
 
     return uniprot_id_index_test_val_train
 
+def save_json(data, filename):
+    with open(filename, 'w') as file:
+        json.dump(data, file)
+
+def load_json(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)
+
 def main():
-    uniprot_id_index_test_val_train = get_dataset_index_simple_split()
+    data_split_index_filename = "data_split_uniprod_id_index.json"  # Added .json extension for clarity
+    uniprot_id_index_test_val_train = {}
 
+    if not os.path.exists(data_split_index_filename):
+        uniprot_id_index_test_val_train = get_dataset_index_simple_split()
+        save_json(uniprot_id_index_test_val_train, data_split_index_filename)
+    else:  
+        uniprot_id_index_test_val_train = load_json(data_split_index_filename)
 
-    
+    # Example: print the loaded data
+    print(uniprot_id_index_test_val_train)
+
+    generate_4channel_cloud__data_from_uniprot("P05067")
 
 
 
