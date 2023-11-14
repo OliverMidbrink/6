@@ -195,16 +195,21 @@ def calculate_max_axis_histogram_from_uniprot_id_list(protein_atom_point_clouds_
 
 
 
-def get_dataset_index_simple_split():
-    
-
-def main():
-    protein_atom_point_clouds_folder = os.path.join("data", "protein_atom_point_clouds")
+def get_dataset_index_simple_split(data_folder_name="protein_atom_point_clouds"):
+    protein_atom_point_clouds_folder = os.path.join("data", data_folder_name)
     all_filenames_list = glob.glob(os.path.join(protein_atom_point_clouds_folder, "*.hdf5"))
 
     prot_ids_list = extract_uniprot_ids_from_list(all_filenames_list)
     
     uniprot_id_index_test_val_train = shuffle_and_split_uniprot_ids_simple(prot_ids_list)
+
+    return uniprot_id_index_test_val_train
+
+def main():
+    uniprot_id_index_test_val_train = get_dataset_index_simple_split()
+
+
+    
 
 
 
