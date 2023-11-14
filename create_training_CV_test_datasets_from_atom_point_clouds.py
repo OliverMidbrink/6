@@ -11,6 +11,8 @@ import random
 import h5py
 from tensorflow.keras import layers, models
 import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras import optimizers, losses, metrics
 
 
 def group_files_by_uniprot(file_paths):
@@ -92,9 +94,9 @@ def data_generator(file_paths, grid_size=(100, 100, 100), num_channels=4):
 
 def build_model(input_shape, num_classes):
     model = models.Sequential()
-    model.add(layers.Conv3D(64, (3, 3, 3), activation='relu', input_shape=input_shape))
+    model.add(layers.Conv3D(64, (3, 3, 3), activation='relu', padding='same', input_shape=input_shape))
     model.add(layers.MaxPooling3D((2, 2, 2)))
-    model.add(layers.Conv3D(128, (3, 3, 3), activation='relu'))
+    model.add(layers.Conv3D(128, (3, 3, 3), activation='relu', padding='same'))
     model.add(layers.MaxPooling3D((2, 2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dense(256, activation='relu'))
@@ -103,12 +105,26 @@ def build_model(input_shape, num_classes):
 
 
 
+def train_model(model, train_generator, val_generator, epochs=10, steps_per_epoch=None, validation_steps=None):
+    history = model.fit(train_generator, 
+                        epochs=epochs, 
+                        steps_per_epoch=steps_per_epoch, 
+                        validation_data=val_generator,
+                        validation_steps=validation_steps)
+    return history
+
+def evaluate_model(model, test_generator):
+    # Assuming test_data is formatted as (inputs, targets)
+    test_loss, test_accuracy = model.evaluate(test_generator)
+    print(f"Test Loss: {test_loss}, Test Accuracy: {test_accuracy}")
+
+
 
 def read_hdf5(file_path):
     with h5py.File(file_path, 'r') as h5file:
         return np.array(h5file['atom_coordinates'])
 
-def generate_4channel_cloud__data_from_uniprot(uniprot_id, protein_atom_point_clouds_folder=os.path.join("data", "protein_atom_point_clouds"), grid_size=(100, 100, 100), num_channels=4):
+def get_4channel_cloud_data_from_uniprot(uniprot_id, protein_atom_point_clouds_folder=os.path.join("data", "protein_atom_point_clouds"), grid_size=(100, 100, 100), num_channels=4):
     # Only use the first fold of each uniprot
     protein_atom_point_cloud_filename = os.path.join(protein_atom_point_clouds_folder, "AF-{}-F1-model_v4_atom_cloud.hdf5".format(uniprot_id))
     
@@ -125,7 +141,7 @@ def generate_4channel_cloud__data_from_uniprot(uniprot_id, protein_atom_point_cl
             x, y, z = map(int, coord[1:])
             channels[atom_type - 1, x, y, z] = 1  # Mark the presence of the atom
 
-    yield channels
+    return channels
 
 
 def calculate_max_axis_from_uniprot(protein_atom_point_clouds_folder, uniprot_id):
@@ -194,7 +210,6 @@ def calculate_max_axis_histogram_from_uniprot_id_list(protein_atom_point_clouds_
     plt.show()
 
 
-
 def get_dataset_index_simple_split(data_folder_name="protein_atom_point_clouds"):
     protein_atom_point_clouds_folder = os.path.join("data", data_folder_name)
     all_filenames_list = glob.glob(os.path.join(protein_atom_point_clouds_folder, "*.hdf5"))
@@ -212,8 +227,39 @@ def save_json(data, filename):
 def load_json(filename):
     with open(filename, 'r') as file:
         return json.load(file)
+    
+def uniprot_id_to_one_hot(full_uniprot_id_list, uniprot_id):
+    # Initialize a one-hot encoded vector with all zeros
+    one_hot_vector = [0] * len(full_uniprot_id_list)
+
+    # Get the index of the uniprot_id in the list
+    if uniprot_id in full_uniprot_id_list:
+        index = full_uniprot_id_list.index(uniprot_id)
+        # Set '1' at the corresponding position
+        one_hot_vector[index] = 1
+
+    return one_hot_vector
+
+def yield_data_from_uniprot_id_list(uniprot_ids_list, full_uniprot_id_list, batch_size, grid_size=(100, 100, 100), num_channels=4):
+    batch_X = []
+    batch_Y = []
+    for uniprot_id in uniprot_ids_list:
+        X_4_channel_one_hot_3d_volume = get_4channel_cloud_data_from_uniprot(uniprot_id, grid_size=grid_size, num_channels=num_channels)
+        Y_class_id_based_on_uniprot_to_one_hot = uniprot_id_to_one_hot(full_uniprot_id_list, uniprot_id)
+
+        batch_X.append(X_4_channel_one_hot_3d_volume)
+        batch_Y.append(Y_class_id_based_on_uniprot_to_one_hot)
+
+        if len(batch_X) == batch_size:
+            yield np.array(batch_X), np.array(batch_Y)
+            batch_X, batch_Y = [], []
+
+    # Yield any remaining data as the last batch
+    if batch_X:
+        yield np.array(batch_X), np.array(batch_Y)
 
 def main():
+    # Load the train val test split index of uniprot_ids
     data_split_index_filename = "data_split_uniprod_id_index.json"  # Added .json extension for clarity
     uniprot_id_index_test_val_train = {}
 
@@ -223,16 +269,34 @@ def main():
     else:  
         uniprot_id_index_test_val_train = load_json(data_split_index_filename)
 
-    # Example: print the loaded data
-    print(uniprot_id_index_test_val_train)
+    full_uniprot_ids_list_index_concatenated = uniprot_id_index_test_val_train["test"] + uniprot_id_index_test_val_train["val"] + uniprot_id_index_test_val_train["train"]
+    print(len(full_uniprot_ids_list_index_concatenated))
+    full_uniprot_ids_list_index_concatenated = list(set(full_uniprot_ids_list_index_concatenated))
+    print(len(full_uniprot_ids_list_index_concatenated))
 
-    generate_4channel_cloud__data_from_uniprot("P05067")
+    # Build the model
+    num_classes = len(set(full_uniprot_ids_list_index_concatenated))
+    model = build_model(input_shape=(4, 100, 100, 100), num_classes=num_classes)
 
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
+    # Batch size
+    batch_size = 32
 
+    # Prepare the generators with batch size
+    train_generator = yield_data_from_uniprot_id_list(uniprot_id_index_test_val_train["train"], full_uniprot_ids_list_index_concatenated, batch_size)
+    val_generator = yield_data_from_uniprot_id_list(uniprot_id_index_test_val_train["val"], full_uniprot_ids_list_index_concatenated, batch_size)
+    test_generator = yield_data_from_uniprot_id_list(uniprot_id_index_test_val_train["test"], full_uniprot_ids_list_index_concatenated, batch_size)
 
+    # Determine steps per epoch and validation steps
+    steps_per_epoch = len(uniprot_id_index_test_val_train["train"]) // batch_size
+    validation_steps = len(uniprot_id_index_test_val_train["val"]) // batch_size
 
+    # Train the model
+    history = train_model(model, train_generator, val_generator, epochs=10, steps_per_epoch=steps_per_epoch, validation_steps=validation_steps)
 
+    # Test the model
+    evaluate_model(model, test_generator)
 
 
 if __name__ == "__main__":
