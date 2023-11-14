@@ -13,7 +13,7 @@ from tensorflow.keras import layers, models
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras import optimizers, losses, metrics
-
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 def group_files_by_uniprot(file_paths):
     grouped_files = defaultdict(list)
