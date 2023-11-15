@@ -1,6 +1,5 @@
 from protein_mol_interaction_model import ProteinMolInteractionModel
 from data_generator import get_train_val_test_generators, load_synthetic_iPPI_data
-import matplotlib.pyplot as plt
 
 def main():
     batch_size = 2

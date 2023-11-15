@@ -3,6 +3,10 @@ import json
 import random
 import numpy as np
 
+def get_random_item(synthetic_iPPI_data):
+    return random.choice(list(synthetic_iPPI_data.values()))
+
+
 def load_synthetic_iPPI_data():
     try:
         with open("../DLiP_rule_of_5_compound_data.json", "r") as file:
@@ -57,6 +61,32 @@ def get_random_X_Y_pair(synthetic_iPPI_data):
         return get_random_X_Y_pair(synthetic_iPPI_data)
 
 
+def get_random_X_Y_definite_interact_pair_50_pct_chance_mol_will_inhibit(synthetic_iPPI_data):
+    try:
+        data_item = get_random_item(synthetic_iPPI_data)
+
+        data_item_smiles = data_item["SMILES"][0]
+        data_item_X_A = get_4_channel_grid_data_from_uniprot(data_item["proteins"][0])  # shape should be (4, 100, 100, 100)
+        data_item_X_B = get_4_channel_grid_data_from_uniprot(data_item["proteins"][1])  # shape should be (4, 100, 100, 100)
+
+
+        if random.randint(0, 1):
+            random_mol_smiles = get_random_smiles(synthetic_iPPI_data)
+            random_X_Mol = get_4_channel_grid_data_from_smiles(random_mol_smiles)
+
+            X = [np.array(data_item_X_A), np.array(data_item_X_B), np.array(random_X_Mol)]
+            Y = np.array([1, 1 if data_item_smiles == random_mol_smiles else 0])
+
+            return X, Y
+        else:
+            # The proteins will interact and the molecule will inhibit
+            X = [np.array(data_item_X_A), np.array(data_item_X_B), np.array(get_4_channel_grid_data_from_smiles(data_item_smiles))]
+            Y = np.array([1, 1])
+
+            return X, Y
+    except:
+        return get_random_X_Y_definite_interact_pair_50_pct_chance_mol_will_inhibit(synthetic_iPPI_data)
+
 def random_slice(slice_fraction, DLiP_keys):
     # Calculate slice size
     slice_size = int(len(DLiP_keys) * slice_fraction)
@@ -72,17 +102,35 @@ def get_DLiP_PPI_from_DLiP_ids(DLiP_PPI_data, DLiP_ids):
 def batch_generator(data, batch_size):
     """ General batch generator for training, validation, and testing data. """
     while True:
+        prot_interact_count = 0
+        mol_inhib_count = 0
+        data_iter = 0
         for i in range(0, len(data.keys()), batch_size):
             batch_X_A, batch_X_B, batch_X_Mol = [], [], []
             batch_Y = []
             
+            data_iter += 1
+            if i%30 == 0:
+                print("\tMol Inhibiting Count: {}, fraction: {}. Prot interact count {}, frac {}. Total {}".format(mol_inhib_count, mol_inhib_count / data_iter, prot_interact_count, prot_interact_count / data_iter, data_iter))
+
             # Get random protein pairs
             for x in range(batch_size):
-                X, Y = get_random_X_Y_pair(data)
-                batch_X_A.append(X[0])
-                batch_X_B.append(X[1])
-                batch_X_Mol.append(X[2])
-                batch_Y.append(Y)
+                if random.randint(0, 1):
+                    X, Y = get_random_X_Y_pair(data)
+                    batch_X_A.append(X[0])
+                    batch_X_B.append(X[1])
+                    batch_X_Mol.append(X[2])
+                    batch_Y.append(Y)
+
+                else:
+                    X, Y = get_random_X_Y_definite_interact_pair_50_pct_chance_mol_will_inhibit(data)
+                    batch_X_A.append(X[0])
+                    batch_X_B.append(X[1])
+                    batch_X_Mol.append(X[2])
+                    batch_Y.append(Y)
+                    
+                mol_inhib_count = Y[1]
+                prot_interact_count = Y[0]
             
             # Convert lists to numpy arrays
             batch_X_A = np.array(batch_X_A)
