@@ -64,15 +64,54 @@ def get_random_X_Y_pair(synthetic_iPPI_data):
     return X, Y
 
 
+def random_slice(slice_fraction, data):
+    # Shuffle the data
+    np.random.shuffle(data)
+
+    # Calculate slice size
+    slice_size = int(len(data) * slice_fraction)
+
+    # Return the sliced data
+    return data[:slice_size]
+
+
+np.random.seed(42)  # Set a random seed for reproducibility (optional)
+
+full_synthetic_iPPI_data = load_synthetic_iPPI_data()
+
+# Ensure the data is in a format suitable for slicing (e.g., list or array)
+full_synthetic_iPPI_data = list(full_synthetic_iPPI_data)
+
+# Calculate fractions for splitting
+total_size = len(full_synthetic_iPPI_data)
+train_fraction = 0.7 * 0.75
+val_fraction = 0.3 * 0.75
+test_fraction = 0.25
+
+# Shuffle and slice data
+shuffled_data = np.random.permutation(full_synthetic_iPPI_data)
+train_data = random_slice(train_fraction, shuffled_data)
+val_data = random_slice(val_fraction, shuffled_data[len(train_data):])
+test_data = random_slice(test_fraction, shuffled_data[len(train_data) + len(val_data):])
+
+def train_batch_generator(train_data_synthetic_iPPL):
+
+
+    return X and Y in good format
+
+def val_batch_generator(val_data_synthetic_iPPL):
+
+
+    return X and Y in good format
+
+
+def test_batch_generator(test_data_synthetic_iPPL):
+
+
+    return X and Y in good format
+
 def main():
-    full_synthetic_iPPI_data = load_synthetic_iPPI_data()
-    
-    train_data = random_slice(0.7 * 0.75, full_synthetic_iPPI_data)
-    val_data = random_slice(0.3 * 0.75, full_synthetic_iPPI_data)
-    test_data = random_slice(0.25, full_synthetic_iPPI_data)
-
-    
-
+    print("adfasdf")
 
 if __name__ == "__main__":
     main()
