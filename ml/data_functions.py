@@ -46,7 +46,9 @@ def apply_transformations(coordinates, grid_size):
 
 def read_hdf5(file_path):
     with h5py.File(file_path, 'r') as h5file:
+        print("Reading File")
         return np.array(h5file['atom_coordinates'])
+
 
 def get_4_channel_grid_data_from_uniprot(uniprot_id, protein_atom_point_clouds_folder=os.path.join("..", "data", "protein_atom_point_clouds"), grid_size=(100, 100, 100), num_channels=4):
     # Only use the first fold of each uniprot
