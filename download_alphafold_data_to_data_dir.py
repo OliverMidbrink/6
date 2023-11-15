@@ -36,13 +36,16 @@ def download_and_extract(url, target_dir):
 
     file_name = url.split('/')[-1]
     file_path = os.path.join(target_dir, file_name)
-
-    print(f"Downloading {file_name}...")
-    download_file(url, file_path)
+    
+    if not os.path.exists(file_path):
+        print(f"Downloading {file_name}...")
+        download_file(url, file_path)
+    else:
+        print("File {file_name} already exists...")
 
     print(f"Extracting {file_name}...")
     extract_tar_file(file_path, target_dir)
 
 if __name__ == "__main__":
     url = "https://ftp.ebi.ac.uk/pub/databases/alphafold/latest/UP000005640_9606_HUMAN_v4.tar"
-    download_and_extract(url, "data")
+    download_and_extract(url, "data/AlphaFoldData")

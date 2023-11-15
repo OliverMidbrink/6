@@ -116,6 +116,9 @@ def main(folder_path):
     pdb_gz_files = glob.glob(os.path.join(folder_path, "*.pdb.gz"))
     uniprot_ids = {os.path.basename(f).split('-')[1] for f in pdb_gz_files}
 
+    if not os.path.exists(os.path.join("data", "protein_atom_point_clouds")):
+        os.makedirs(os.path.join("data", "protein_atom_point_clouds"), exist_ok=True)
+
     pbar = tqdm(uniprot_ids, desc="Processing proteins", unit="protein")
     for uniprot_id in pbar:
         try:
@@ -131,5 +134,5 @@ def main(folder_path):
             print(f"An error occurred while processing {uniprot_id}: {e}")
 
 if __name__ == "__main__":
-    data_folder_path = "data/UP000005640_9606_HUMAN_v4"
+    data_folder_path = "data/AlphaFoldData/"
     main(data_folder_path)
