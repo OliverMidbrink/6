@@ -7,7 +7,7 @@ from keras.layers import LeakyReLU
 import keras.backend as K
 
 class ProteinInteractionModel:
-    def __init__(self, protein_input_shape=(4, 100, 100, 100), molecule_input_shape=(8, 30, 30, 30), num_classes=2):
+    def __init__(self, protein_input_shape=(4, 100, 100, 100), molecule_input_shape=(9, 30, 30, 30), num_classes=2):
         self.protein_input_shape = protein_input_shape
         self.molecule_input_shape = molecule_input_shape
         self.num_classes = num_classes
@@ -41,20 +41,20 @@ class ProteinInteractionModel:
     def _protein_pipe(self, input_shape):
         input_layer = Input(shape=input_shape)
         x = self._conv_block(input_layer, 64)
-        x = MaxPooling3D((2, 2, 2))(x)
+        x = MaxPooling3D((2, 2, 2), padding='same')(x)
         x = self._residual_block(x, 128)
-        x = MaxPooling3D((2, 2, 2))(x)
+        x = MaxPooling3D((2, 2, 2), padding='same')(x)
         x = self._attention_block(x)
         x = self._residual_block(x, 256)
-        x = MaxPooling3D((2, 2, 2))(x)
+        x = MaxPooling3D((2, 2, 2), padding='same')(x)
         return Model(inputs=input_layer, outputs=Flatten()(x))
 
     def _molecule_pipe(self, input_shape):
         input_layer = Input(shape=input_shape)
         y = self._conv_block(input_layer, 64)
-        y = MaxPooling3D((2, 2, 2))(y)
+        y = MaxPooling3D((2, 2, 2), padding='same')(y)  # Add padding='same'
         y = self._residual_block(y, 128)
-        y = MaxPooling3D((2, 2, 2))(y)
+        y = MaxPooling3D((2, 2, 2), padding='same')(y)
         return Model(inputs=input_layer, outputs=Flatten()(y))
 
     def _build_model(self):
