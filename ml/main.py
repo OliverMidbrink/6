@@ -1,6 +1,5 @@
-
-from .protein_mol_interaction_model import ProteinMolInteractionModel
-from .data_generator import get_train_val_test_generators, load_synthetic_iPPI_data
+from protein_mol_interaction_model import ProteinMolInteractionModel
+from data_generator import get_train_val_test_generators, load_synthetic_iPPI_data
 
 def main():
     full_synthetic_iPPI_data = load_synthetic_iPPI_data()
