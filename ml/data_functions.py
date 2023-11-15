@@ -6,7 +6,6 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import h5py
 
 
 def center_of_mass(coordinates):
