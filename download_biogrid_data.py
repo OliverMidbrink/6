@@ -40,7 +40,7 @@ def extract_specific_files(filename, extract_to='.', keyword='Homo_sapiens'):
                 zip_ref.extract(file, extract_to)
                 print(f"Extracted {file} to {extract_to}")
 
-def download_and_extract(url, extract_to='.'):
+def download_and_extract(url, extract_to='./data/'):
     """
     Download a ZIP file from a URL and extract its contents.
 
