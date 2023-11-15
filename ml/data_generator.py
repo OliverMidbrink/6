@@ -102,7 +102,7 @@ def batch_generator(data, batch_size):
     while True:
         prot_interact_count = 0
         mol_inhib_count = 0
-        data_iter = 0
+        data_iter = 1
         for i in range(0, len(data.keys()), batch_size):
             batch_X_A, batch_X_B, batch_X_Mol = [], [], []
             batch_Y = []
