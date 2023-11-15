@@ -6,7 +6,7 @@ from keras.activations import relu
 from keras.layers import LeakyReLU
 import keras.backend as K
 
-class ProteinInteractionModel:
+class ProteinMolInteractionModel:
     def __init__(self, protein_input_shape=(4, 100, 100, 100), molecule_input_shape=(9, 30, 30, 30), num_classes=2):
         self.protein_input_shape = protein_input_shape
         self.molecule_input_shape = molecule_input_shape
