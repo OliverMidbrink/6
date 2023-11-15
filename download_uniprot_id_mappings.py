@@ -33,7 +33,7 @@ def extract_gz_file_with_progress(filepath, output_folder):
         print(f"Extracted: {output_path}")
 
 # URL of the file to be downloaded
-url = "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz"
+url = "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping_selected.tab.gz"
 
 # Local path for downloaded file
 local_filename = url.split('/')[-1]
