@@ -45,7 +45,6 @@ def apply_transformations(coordinates, grid_size):
 
 def read_hdf5(file_path):
     with h5py.File(file_path, 'r') as h5file:
-        print("Reading File")
         return np.array(h5file['atom_coordinates'])
 
 

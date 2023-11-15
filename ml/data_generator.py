@@ -54,7 +54,6 @@ def get_random_X_Y_pair(synthetic_iPPI_data):
 
         return X, Y
     except:
-        print("protein not found")
         return get_random_X_Y_pair(synthetic_iPPI_data)
 
 
