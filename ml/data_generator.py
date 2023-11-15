@@ -2,7 +2,6 @@ from data_functions import get_4_channel_grid_data_from_smiles, get_4_channel_gr
 import json
 import random
 import numpy as np
-import numpy as np
 
 def get_data_item(synthetic_iPPI_data_json_item):
     # Assuming the data item needs to be processed for grid data
@@ -65,9 +64,6 @@ def get_random_X_Y_pair(synthetic_iPPI_data):
 
 
 def random_slice(slice_fraction, data):
-    # Shuffle the data
-    np.random.shuffle(data)
-
     # Calculate slice size
     slice_size = int(len(data) * slice_fraction)
 
@@ -75,43 +71,61 @@ def random_slice(slice_fraction, data):
     return data[:slice_size]
 
 
-np.random.seed(42)  # Set a random seed for reproducibility (optional)
+def batch_generator(data, batch_size):
+    """ General batch generator for training, validation, and testing data. """
+    while True:
+        np.random.shuffle(data)  # Shuffle every epoch
+        for i in range(0, len(data), batch_size):
+            batch_data = data[i:i + batch_size]
+            batch_X_A, batch_X_B, batch_X_Mol = [], [], []
+            batch_Y = []
+            
+            for item in batch_data:
+                X, Y = get_random_X_Y_pair(item)
+                batch_X_A.append(X[0])
+                batch_X_B.append(X[1])
+                batch_X_Mol.append(X[2])
+                batch_Y.append(Y)
+            
+            # Convert lists to numpy arrays
+            batch_X_A = np.array(batch_X_A)
+            batch_X_B = np.array(batch_X_B)
+            batch_X_Mol = np.array(batch_X_Mol)
+            batch_Y = np.array(batch_Y)
 
-full_synthetic_iPPI_data = load_synthetic_iPPI_data()
-
-# Ensure the data is in a format suitable for slicing (e.g., list or array)
-full_synthetic_iPPI_data = list(full_synthetic_iPPI_data)
-
-# Calculate fractions for splitting
-total_size = len(full_synthetic_iPPI_data)
-train_fraction = 0.7 * 0.75
-val_fraction = 0.3 * 0.75
-test_fraction = 0.25
-
-# Shuffle and slice data
-shuffled_data = np.random.permutation(full_synthetic_iPPI_data)
-train_data = random_slice(train_fraction, shuffled_data)
-val_data = random_slice(val_fraction, shuffled_data[len(train_data):])
-test_data = random_slice(test_fraction, shuffled_data[len(train_data) + len(val_data):])
-
-def train_batch_generator(train_data_synthetic_iPPL):
-
-
-    return X and Y in good format
-
-def val_batch_generator(val_data_synthetic_iPPL):
+            yield [batch_X_A, batch_X_B, batch_X_Mol], batch_Y
 
 
-    return X and Y in good format
+def get_train_val_test_generators(train_fraction=0.7 * 0.75, val_fraction=0.3 * 0.75, test_fraction=0.25, batch_size=32, random_seed=None):
+    # Set a random seed for reproducibility (optional)
+    if random_seed is not None:
+        np.random.seed(random_seed)
 
+    # Load data
+    full_synthetic_iPPI_data = load_synthetic_iPPI_data()
+    if full_synthetic_iPPI_data is None:
+        print("Data loading failed.")
+        return None, None, None
 
-def test_batch_generator(test_data_synthetic_iPPL):
+    # Ensure the data is in a format suitable for shuffling and slicing
+    full_synthetic_iPPI_data = list(full_synthetic_iPPI_data)
 
+    # Shuffle and slice data
+    shuffled_data = np.random.permutation(full_synthetic_iPPI_data)
+    train_data = random_slice(train_fraction, shuffled_data)
+    val_data = random_slice(val_fraction, shuffled_data[len(train_data):])
+    test_data = random_slice(test_fraction, shuffled_data[len(train_data) + len(val_data):])
 
-    return X and Y in good format
+    # Create generators
+    train_gen = batch_generator(train_data, batch_size)
+    val_gen = batch_generator(val_data, batch_size)
+    test_gen = batch_generator(test_data, batch_size)
+
+    return train_gen, val_gen, test_gen
 
 def main():
-    print("adfasdf")
+    print("This module provides data generators for training, validation, and testing.")
 
 if __name__ == "__main__":
     main()
+
