@@ -76,13 +76,11 @@ def get_random_X_Y_definite_interact_pair_50_pct_chance_mol_will_inhibit(synthet
 
             X = [np.array(data_item_X_A), np.array(data_item_X_B), np.array(random_X_Mol)]
             Y = np.array([1, 1 if data_item_smiles == random_mol_smiles else 0])
-
             return X, Y
         else:
             # The proteins will interact and the molecule will inhibit
             X = [np.array(data_item_X_A), np.array(data_item_X_B), np.array(get_4_channel_grid_data_from_smiles(data_item_smiles))]
             Y = np.array([1, 1])
-
             return X, Y
     except:
         return get_random_X_Y_definite_interact_pair_50_pct_chance_mol_will_inhibit(synthetic_iPPI_data)
@@ -109,8 +107,7 @@ def batch_generator(data, batch_size):
             batch_X_A, batch_X_B, batch_X_Mol = [], [], []
             batch_Y = []
             
-            data_iter += 1
-            if i%30 == 0:
+            if i%1 == 0:
                 print("\tMol Inhibiting Count: {}, fraction: {}. Prot interact count {}, frac {}. Total {}".format(mol_inhib_count, mol_inhib_count / data_iter, prot_interact_count, prot_interact_count / data_iter, data_iter))
 
             # Get random protein pairs
@@ -128,9 +125,10 @@ def batch_generator(data, batch_size):
                     batch_X_B.append(X[1])
                     batch_X_Mol.append(X[2])
                     batch_Y.append(Y)
-                    
-                mol_inhib_count = Y[1]
-                prot_interact_count = Y[0]
+                
+                data_iter += 1
+                mol_inhib_count += Y[1]
+                prot_interact_count += Y[0]
             
             # Convert lists to numpy arrays
             batch_X_A = np.array(batch_X_A)
@@ -150,7 +148,7 @@ def get_train_val_test_generators(train_fraction=0.7 * 0.75, val_fraction=0.3 * 
     full_synthetic_iPPI_data = load_synthetic_iPPI_data()
     if full_synthetic_iPPI_data is None:
         print("Data loading failed.")
-        return None, None, None
+        return None, None, None, None, None, None
 
     # Ensure the data is in a format suitable for shuffling and slicing
     full_synthetic_iPPI_data_keys = list(full_synthetic_iPPI_data.keys())
