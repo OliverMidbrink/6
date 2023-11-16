@@ -34,7 +34,7 @@ def apply_transformations(coordinates, grid_size):
     coordinates[:, 1:] += translation
 
     # Apply a random translation
-    half_grid_size = np.array(grid_size) / 2
+    half_grid_size = np.array(grid_size) / 10
     translation = np.random.uniform(-half_grid_size, half_grid_size)
     coordinates[:, 1:] += translation
 
