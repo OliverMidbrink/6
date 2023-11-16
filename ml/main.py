@@ -1,5 +1,6 @@
-from protein_mol_interaction_model import ProteinMolInteractionModel
+from m1 import M1Model
 from m2 import M2Model
+
 from data_generator import get_train_val_test_generators, load_synthetic_iPPI_data
 import tensorflow as tf
 import matplotlib as plt
