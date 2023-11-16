@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
 
 class M2Model(Model):
     def __init__(self, protein_input_shape=(4, 100, 100, 100), molecule_input_shape=(9, 30, 30, 30), num_classes=2):
-        super(ProteinMolInteractionModel, self).__init__()
+        super(M2Model, self).__init__()
         self.protein_input_shape = protein_input_shape
         self.molecule_input_shape = molecule_input_shape
         self.num_classes = num_classes
