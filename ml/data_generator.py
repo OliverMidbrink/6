@@ -107,8 +107,8 @@ def batch_generator(data, batch_size):
             batch_X_A, batch_X_B, batch_X_Mol = [], [], []
             batch_Y = []
             
-            if i%1 == 0:
-                print("\tMol Inhibiting Count: {}, fraction: {}. Prot interact count {}, frac {}. Total {}".format(mol_inhib_count, mol_inhib_count / data_iter, prot_interact_count, prot_interact_count / data_iter, data_iter))
+            #if i%1 == 0:
+                #print("\tMol Inhibiting Count: {}, fraction: {}. Prot interact count {}, frac {}. Total {}".format(mol_inhib_count, mol_inhib_count / data_iter, prot_interact_count, prot_interact_count / data_iter, data_iter))
 
             # Get random protein pairs
             for x in range(batch_size):
