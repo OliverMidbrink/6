@@ -7,22 +7,11 @@ import json
 from openai import OpenAI
 from data_generator import *
 import os
-import requests
 
 client = OpenAI(
     # defaults to os.environ.get("OPENAI_API_KEY")
     api_key="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",
 )
-
-CACTUS = "https://cactus.nci.nih.gov/chemical/structure/{0}/{1}"
-
-
-def smiles_to_iupac(smiles):
-    rep = "iupac_name"
-    url = CACTUS.format(smiles, rep)
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.text
 
 
 def ask_gpt(input_text, prompt, model):
@@ -67,9 +56,6 @@ def extract_info_from_json(json_data):
     data_str += json.dumps(json_data['gene'])
     return data_str
 
-
-
-
 def main():
     all_iPPI_helpfullness_data = {}
     all_iPPI_helpfullness_data_filename = "all_iPPI_ChatGPT_4_analysis_data.json"
@@ -91,15 +77,19 @@ def main():
         random_iPPI_key = iPPI_item["compound_id"]
         print("Checking interaction {}".format(random_iPPI_key))
 
-        data_A = fetch_uniprot_data(uniprot_id_A)
-        data_str_A = extract_info_from_json(data_A)
+        try: 
+            data_A = fetch_uniprot_data(uniprot_id_A)
+            data_str_A = extract_info_from_json(data_A)
 
-        data_B = fetch_uniprot_data(uniprot_id_B)
-        data_str_B = extract_info_from_json(data_B)
+            data_B = fetch_uniprot_data(uniprot_id_B)
+            data_str_B = extract_info_from_json(data_B)
+
+        except Exception as e:
+            continue
 
         total_smiles_available_drug_score = 0
         total_smiles_iterated = 0
-        input_text = SMILES + ": Is this SMILES compound (IUPAC: {}) an active ingredient in a sold medical compound? Give a short 0 to 100 where 100 is sold. Nothing else.".format(smiles_to_iupac(SMILES))
+        input_text = SMILES + ": Is this SMILES compound an active ingredient in a sold medical compound? Give a short 0 to 100 where 100 is sold. Nothing else."
         print(input_text)
 
         while total_smiles_iterated < 10:
