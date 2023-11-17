@@ -5,12 +5,14 @@ import openai, sys, time, random, re
 import numpy as np
 import json
 from openai import OpenAI
-from ..ml import data_generator
+from data_generator import *
+import os
 
 client = OpenAI(
     # defaults to os.environ.get("OPENAI_API_KEY")
     api_key="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",
 )
+
 
 def ask_gpt(input_text, prompt, model):
     gpt_response = client.chat.completions.create(
@@ -23,50 +25,6 @@ def ask_gpt(input_text, prompt, model):
     )
     return gpt_response.choices[0].message.content
 
-
-
-def main():
-    synthetic_iPPI_data = data_generator.load_synthetic_iPPI_data()
-    
-    # Get random pair
-    uniprot_id_A = data_generator.get_random_item(synthetic_iPPI_data)["proteins"][0]
-    uniprot_id_B = data_generator.get_random_item(synthetic_iPPI_data)["proteins"][0]
-
-    data_generator.check_if_pair_in_DLiP_and_return_smiles(synthetic_iPPI_data, uniprot_id_A, uniprot_id_B)
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-def analyze_protein_gpt_text_output(data):
-    with open("prompt.txt", "r") as file:
-        return ask_gpt(data, file.read(), "gpt-4-1106-preview")
-
-
-def extract_values_from_gpt_analysis_text(text):
-    try:
-        matches = re.findall(r'\[([-\d\s,]+)\]', text)
-        # Extract numbers from the matches, accounting for possible spaces and commas
-        values = []
-        for match in matches:
-            numbers = match.split(',')
-            for number in numbers:
-                number = number.strip()  # Remove whitespace
-                if number:
-                    values.append(int(number))  # Convert to integer and add to list
-        return values
-    except:
-        print("Not able to extract values from the following text: ", text)
-
-def extract_info_from_json(json_data):
-    data_str = ""
-    data_str += json.dumps(json_data['protein'])
-    data_str += json.dumps(json_data['gene'])
-    return data_str
-
-# Function to fetch data from UniProt
 def fetch_uniprot_data(protein_id):
     """
     Fetches data from UniProt for the given protein ID.
@@ -92,54 +50,89 @@ def fetch_uniprot_data(protein_id):
         print(f"An error occurred for UniProt ID {protein_id}: {e}")
         return None
 
+def extract_info_from_json(json_data):
+    data_str = ""
+    data_str += json.dumps(json_data['protein'])
+    data_str += json.dumps(json_data['gene'])
+    return data_str
 
-def save_json(json_data, filename):
-    with open(filename, "w") as file:
-        json.dump(json_data, file)
+def main():
+    all_iPPI_helpfullness_data = {}
+    all_iPPI_helpfullness_data_filename = "all_iPPI_ChatGPT_4_analysis_data.json"
 
-# Load the Excel file
-file_path = '13321_2023_720_MOESM1_ESM.xlsx'  # Update this path if needed
+    if os.path.exists(all_iPPI_helpfullness_data_filename):
+        with open(all_iPPI_helpfullness_data_filename, "r") as file:
+            all_iPPI_helpfullness_data = json.load(file)
 
-# Read the first sheet (or specify the sheet_name if it's different)
-df = pd.read_excel(file_path)
+    synthetic_iPPI_data = load_synthetic_iPPI_data()
 
-# Assuming 'Uniprot' is the column name containing the UniProt IDs.
-# If the column name is different, replace 'Uniprot' with the correct name.
-uniprot_ids = df['Uniprot'].tolist()
+    for iPPI_item in synthetic_iPPI_data.values():
+        if iPPI_item["compound_id"] in all_iPPI_helpfullness_data.keys():
+            # Skip if already processed before
+            print("Already processed {}".format(iPPI_item["compound_id"]))
+            continue
 
-# Print the first 10 UniProt IDs to verify they're being read correctly
-print("First 10 UniProt IDs from the file:")
-print(uniprot_ids[:10])
+        uniprot_id_A, uniprot_id_B = iPPI_item["proteins"]
+        SMILES = iPPI_item["SMILES"][0]
+        random_iPPI_key = iPPI_item["compound_id"]
+        print("Checking interaction {}".format(random_iPPI_key))
 
-full_gpt_analysis = {}
-exctracted_values_from_gpt_analysis = {}
+        try: 
+            data_A = fetch_uniprot_data(uniprot_id_A)
+            data_str_A = extract_info_from_json(data_A)
 
-# Now iterate over each UniProt ID and fetch the data
-for protein_id in random.sample(uniprot_ids, 100):
-    try:
-        data = fetch_uniprot_data(protein_id)
-        data_str = extract_info_from_json(data)
+            data_B = fetch_uniprot_data(uniprot_id_B)
+            data_str_B = extract_info_from_json(data_B)
+
+        except Exception as e:
+            continue
+
+        total_smiles_available_drug_score = 0
+        total_smiles_iterated = 0
+        input_text = SMILES + ": Is this SMILES compound an active ingredient in a sold medical compound? Give a short 0 to 100 where 100 is sold. Nothing else."
+        print(input_text)
+
+        while total_smiles_iterated < 10:
+            try:
+                output_drug_availability_score = float(ask_gpt(input_text, "", "gpt-4-1106-preview")) / 100
+                total_smiles_iterated += 1
+                total_smiles_available_drug_score += output_drug_availability_score
+                print(output_drug_availability_score)
+            except Exception as e:
+                print(e)
         
-        analysis_text = analyze_protein_gpt_text_output(data_str)
-        extracted_values = extract_values_from_gpt_analysis_text(analysis_text)
+        avg_SMILES_availability = total_smiles_available_drug_score / total_smiles_iterated
+        print("Avg SMILES availability: {}, total_smiles_iterated: {}".format(avg_SMILES_availability, total_smiles_iterated))
 
-        full_gpt_analysis[protein_id] = analysis_text
-        exctracted_values_from_gpt_analysis[protein_id] = extracted_values
+
+
+        input_text = "Would these two proteins [{}, {}] interact and how helpful would inhibiting this interaction be for upregulating Oct4, Sox2 and Klf4?. You have to give a number from 0 to 100. Only respond with this number.".format(data_str_A, data_str_B)
+        print(input_text)
+
+        total_iPPI_helpfullness = 0
+        iterated_proteins = 0
+        while iterated_proteins < 10:
+            try:
+                output_iPPI_helpfullness = float(ask_gpt(input_text, "", "gpt-4-1106-preview")) / 100
+                iterated_proteins += 1
+                total_iPPI_helpfullness += output_iPPI_helpfullness
+                print(output_iPPI_helpfullness)
+            except Exception as e:
+                print(e)
         
+        avg_iPPI_helpfullness = total_iPPI_helpfullness / iterated_proteins
+        print("Avg iPPI helpfullness: {}, iterated_proteins: {}".format(avg_iPPI_helpfullness, iterated_proteins))
+            
+        all_iPPI_helpfullness_data[random_iPPI_key] = {
+            "uniprot_id_A": uniprot_id_A,
+            "uniprot_id_B": uniprot_id_B,
+            "SMILES": SMILES,
+            "AVG_SMILES_AVAILABILITY_AS_DRUG": avg_SMILES_availability,
+            "AVG_iPPI_helpfullness_for_OSK_upregulation": avg_iPPI_helpfullness,
+        }
 
-        save_json(full_gpt_analysis, "full_gpt_analysis_output.json")
-        save_json(exctracted_values_from_gpt_analysis, "exctracted_values_from_gpt_analysis_output.json")
+        with open(all_iPPI_helpfullness_data_filename, "w") as file:
+            json.dump(all_iPPI_helpfullness_data, file)
 
-
-        print("#" * 20)
-        print(analysis_text)
-        print("Extracted values are {}.".format(extracted_values))
-
-        sleep(1)  # Sleep to respect the API's rate limit
-    except Exception as e:
-        print(e)
-
-with open("data.json", "r") as file:
-    json = json.load(file)
-    print(json['protein'])
-    print(json['gene'])
+if __name__ == "__main__":
+    main()
