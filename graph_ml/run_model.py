@@ -1,7 +1,8 @@
-from model import create_gnn_model
-from load_data import load_data
 import tensorflow as tf
-import numpy as np
+from load_data import ProteinGraphDataset
+from model import create_gnn_model
+from spektral.data import DisjointLoader
+import sys
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -17,13 +18,21 @@ if gpus:
 
 
 def main():
-    model = create_gnn_model()
+    print("loading data")
+    dataset = ProteinGraphDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors")
+
+    # Estimate the number of classes from the dataset
+    n_classes = dataset.n_classes
+
+    # Create the model
+    model = create_gnn_model(n_features=4, n_classes=n_classes)
     model.summary()
 
-    x_train, y_train = load_data()
-
+    # Prepare the data loader
+    loader = DisjointLoader(dataset, batch_size=4, epochs=100000)
+    
     # Train the model
-    history = model.fit(x_train, y_train, epochs=1, batch_size=1)
+    history = model.fit(loader.load(), steps_per_epoch=loader.steps_per_epoch, epochs=100000)
 
 if __name__ == "__main__":
     main()

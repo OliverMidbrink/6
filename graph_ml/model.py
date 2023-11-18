@@ -1,36 +1,29 @@
-import spektral
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Dropout
-from spektral.layers import GCNConv
+from spektral.layers import GCNConv, GlobalAvgPool
 
-def create_gnn_model(num_features=4, num_classes=23391):
-    # Define the model
-    node_input = Input(shape=(num_features,), name='node_input')
-    adj_input = Input((None,), dtype=tf.float32, sparse=True, name='adj_input')
+def create_gnn_model(n_features, n_classes):
+    # Inputs
+    node_input = Input(shape=(None, n_features), name='node_input')
+    adj_input = Input(shape=(None, None), dtype=tf.float32, sparse=True, name='adj_input')
+    # For Disjoint mode, you also need a segment_ids input that tells which nodes belong to which graph
+    segment_ids = Input(shape=(None,), dtype=tf.int32, name='segment_ids')
 
-    # Graph Convolutional layers
-    x = GCNConv(64, activation='relu')([node_input, adj_input])
-    x = Dropout(0.5)(x)
-    x = GCNConv(64, activation='relu')([x, adj_input])
-    x = Dropout(0.5)(x)
+    # GCN layers
+    gc1 = GCNConv(256, activation='relu')([node_input, adj_input])
+    gc1 = GCNConv(256, activation='relu')([gc1, adj_input])
+    gc1 = GCNConv(256, activation='relu')([gc1, adj_input])
 
-    # Global pooling can be applied here, if needed
+    # A global pooling layer to combine node features into graph features
+    # The segment_ids tensor is used to perform this pooling operation
+    pool = GlobalAvgPool()([gc1, segment_ids])
 
     # Output layer
-    output = Dense(num_classes, activation='softmax')(x)  # Use softmax for multi-class classification
+    output = Dense(n_classes, activation='softmax')(pool)
 
     # Create the model
-    model = Model(inputs=[node_input, adj_input], outputs=output)
+    model = Model(inputs=[node_input, adj_input, segment_ids], outputs=output)
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
-
-
-def main():
-    model = create_gnn_model()
-    model.summary()
-
-
-if __name__ == "__main__":
-    main()
