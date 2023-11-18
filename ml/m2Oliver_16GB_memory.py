@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Conv3D, MaxPooling3D, Flatten, Dense, Concatenate, Dropout, BatchNormalization, Add, GlobalAveragePooling3D, Multiply
+from tensorflow.keras.layers import Input, Conv3D, AveragePooling3D, Flatten, Dense, Concatenate, Dropout, BatchNormalization, Add, GlobalAveragePooling3D, Multiply
 from tensorflow.keras import regularizers
 from tensorflow.keras.activations import relu
 from tensorflow.keras.layers import Activation
@@ -17,35 +17,27 @@ class M2OliverModel16GBMemory(Model):
     def _protein_pipe(self, input_shape):
         input_layer = Input(shape=input_shape)
 
-        x = Conv3D(300, (10, 10, 10), strides=(2, 2, 2), padding='same')(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = MaxPooling3D((4, 4, 4), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), strides=(2, 2, 2), padding='same')(input_layer)
 
-        x = Conv3D(200, (10, 10, 10), strides=(1, 1, 1), padding='same')(input_layer)
+        x = Conv3D(1, (3, 3, 3), padding='same')(x)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
-        x = MaxPooling3D((8, 8, 8), padding='same')(x)
-        
-        x = Conv3D(100, (10, 10, 10), strides=(2, 2, 2), padding='same')(x)
+
+        x = Conv3D(1, (3, 3, 3), padding='same')(x)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
         
         return Model(inputs=input_layer, outputs=Flatten()(x))
 
     def _molecule_pipe(self, input_shape): # Molecule pip is basically disabled during testing 2023-11-16
         input_layer = Input(shape=input_shape)
 
-        x = Conv3D(248, (5, 5, 5), strides=(1, 1, 1), padding='same')(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), strides=(2, 2, 2), padding='same')(input_layer)
 
-        x = Conv3D(100, (12, 12, 12), strides=(2, 2, 2), padding='same')(x)
+        x = Conv3D(1, (2, 2, 2), strides=(1, 1, 1), padding='same')(x)
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), strides=(2, 2, 2), padding='same')(x)
 
         return Model(inputs=input_layer, outputs=Flatten()(x))
 
@@ -61,9 +53,9 @@ class M2OliverModel16GBMemory(Model):
         merged = Concatenate()([protein_pipe1.output, protein_pipe2.output, molecule_pipe.output])
 
         # Deep Neural Network after merging
-        z = Dense(100)(merged)
+        z = Dense(2)(merged)
         z = Activation('relu')(z)
-        z = Dense(50)(z)
+        z = Dense(1)(z)
         z = Activation('relu')(z)
 
         # Output Layer
