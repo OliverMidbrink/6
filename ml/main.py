@@ -33,32 +33,37 @@ def main():
     num_classes = 2
 
 
-    protein_mol_interaction_model = M2Model(protein_input_shape, molecule_input_shape, num_classes)
+    protein_mol_interaction_model = M1Model(protein_input_shape, molecule_input_shape, num_classes)
     protein_mol_interaction_model.summary()
-
-    print("Delete me as a print statment. Debug purpose only: Classname of model is {}".format(protein_mol_interaction_model.__class__.__name__))
-
-    protein_mol_interaction_model.compile(
-        optimizer='adam',
-        loss=['binary_crossentropy', 'binary_crossentropy'],
-        metrics=[accuracy_for_label_1, accuracy_for_label_2]
-    )
 
 
     # Recommended values for steps_per_epoch and epochs:
     steps_per_epoch = train_len // batch_size  # Adjust batch size if needed
     val_steps = val_len // batch_size
     test_steps = test_len // batch_size
-    epochs = 30  # Adjust as needed
-
-    # TODO add validation generator
-    history = protein_mol_interaction_model.fit(train_gen, validation_data=val_gen, steps_per_epoch=steps_per_epoch, 
-                                                batch_size=batch_size, validation_batch_size=batch_size,
-                                                validation_steps=val_steps, epochs=epochs, callbacks=protein_mol_interaction_model.callbacks)
+    epochs = 1  # Adjust as needed
     
 
+    protein_mol_interaction_model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss=['binary_crossentropy', 'binary_crossentropy'],
+        metrics=[accuracy_for_label_1, accuracy_for_label_2]
+    )
 
-    tf.saved_model.save(protein_mol_interaction_model, 'protein_mol_interaction_model_{}_time_{}_n_epochs_{}'.format(protein_mol_interaction_model.__class__.__name__, datetime.now(), epochs))
+    
+
+    while True:
+
+        protein_mol_interaction_model.load_weights('protein_mol_interaction_model')
+
+        history = protein_mol_interaction_model.fit(train_gen, validation_data=val_gen, steps_per_epoch=steps_per_epoch, 
+                                                    batch_size=batch_size, validation_batch_size=batch_size,
+                                                    validation_steps=val_steps, epochs=epochs)
+        
+
+        protein_mol_interaction_model.save_weights('protein_mol_interaction_model')
+
+    tf.saved_model.save(protein_mol_interaction_model, 'protein_mol_interaction_model')
     # Save the history to a file
     with open('protein_mol_interaction_model_{}_time_{}_n_epochs_{}_pickle.pkl'.format(protein_mol_interaction_model.__class__.__name__, datetime.now(), epochs), 'wb') as file:
         pickle.dump(history.history, file)
