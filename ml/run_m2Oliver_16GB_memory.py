@@ -23,7 +23,7 @@ def accuracy_for_label_2(y_true, y_pred):
 
 
 def main():
-    batch_size = 1
+    batch_size = 3
     train_gen, val_gen, test_gen, train_len, val_len, test_len = get_train_val_test_generators(batch_size=batch_size)
 
     protein_input_shape = (4, 100, 100, 100)
@@ -35,6 +35,8 @@ def main():
     protein_mol_interaction_model.summary()
 
     print("Delete me as a print statment. Debug purpose only: Classname of model is {}".format(protein_mol_interaction_model.__class__.__name__))
+    print("Test numbeeer toowwwwwwwoooo???")
+
 
     protein_mol_interaction_model.compile(
         optimizer='adam',
