@@ -17,7 +17,7 @@ def random_rotation():
     rotation = R.random()
     return rotation.as_matrix()
 
-def apply_transformations(coordinates, grid_size):
+def apply_transformations(coordinates, grid_size, scale_factor=3.0):
     # Calculate the center of mass
     com = center_of_mass(coordinates)
 
@@ -28,6 +28,9 @@ def apply_transformations(coordinates, grid_size):
     # Apply a random rotation
     rotation_matrix = random_rotation()
     coordinates[:, 1:] = np.dot(coordinates[:, 1:], rotation_matrix)
+
+    # Scale the coordinates
+    coordinates[:, 1:] *= scale_factor
 
     # Translate back to center of grid
     translation = np.array(grid_size) / 2 - com
@@ -41,6 +44,7 @@ def apply_transformations(coordinates, grid_size):
     # Normalize and scale coordinates to fit in the grid
     # Ensure coordinates are within the grid bounds
     coordinates[:, 1:] = np.clip(coordinates[:, 1:], 0, np.array(grid_size) - 1)
+
     return coordinates
 
 def read_hdf5(file_path):
