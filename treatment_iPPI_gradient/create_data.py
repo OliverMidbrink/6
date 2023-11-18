@@ -21,6 +21,7 @@ def ask_gpt(input_text, prompt, model):
             {"role": "user", "content": input_text}
         ],
         model=model,
+        temperature=0.0
         
     )
     return gpt_response.choices[0].message.content
@@ -92,9 +93,9 @@ def main():
         input_text = SMILES + ": Is this SMILES compound an active ingredient in a sold medical compound? Give a short 0 to 100 where 100 is sold. Nothing else."
         print(input_text)
 
-        while total_smiles_iterated < 10:
+        while total_smiles_iterated < 2:
             try:
-                output_drug_availability_score = float(ask_gpt(input_text, "", "gpt-4-1106-preview")) / 100
+                output_drug_availability_score = float(ask_gpt(input_text, "", "gpt-3.5-turbo-1106")) / 100
                 total_smiles_iterated += 1
                 total_smiles_available_drug_score += output_drug_availability_score
                 print(output_drug_availability_score)
@@ -111,9 +112,9 @@ def main():
 
         total_iPPI_helpfullness = 0
         iterated_proteins = 0
-        while iterated_proteins < 10:
+        while iterated_proteins < 2:
             try:
-                output_iPPI_helpfullness = float(ask_gpt(input_text, "", "gpt-4-1106-preview")) / 100
+                output_iPPI_helpfullness = float(ask_gpt(input_text, "", "gpt-3.5-turbo-1106")) / 100
                 iterated_proteins += 1
                 total_iPPI_helpfullness += output_iPPI_helpfullness
                 print(output_iPPI_helpfullness)
