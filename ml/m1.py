@@ -1,10 +1,11 @@
 from keras.models import Model
-from keras.layers import Input, Conv3D, MaxPooling3D, Flatten, Dense, concatenate, Dropout, BatchNormalization, Add
+from keras.layers import Input, Conv3D, AveragePooling3D, MaxPooling3D, Flatten, Dense, concatenate, Dropout, BatchNormalization, Add
 from keras.layers import GlobalAveragePooling3D, Multiply
 from keras import regularizers
 from keras.activations import relu
 from keras.layers import LeakyReLU
 import keras.backend as K
+import keras
 
 class M1Model(Model):
     def __init__(self, protein_input_shape=(4, 100, 100, 100), molecule_input_shape=(9, 30, 30, 30), num_classes=2):
@@ -42,20 +43,20 @@ class M1Model(Model):
     def _protein_pipe(self, input_shape):
         input_layer = Input(shape=input_shape)
         x = self._conv_block(input_layer, 64)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), padding='same')(x)
         x = self._residual_block(x, 128)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), padding='same')(x)
         x = self._attention_block(x)
         x = self._residual_block(x, 256)
-        x = MaxPooling3D((2, 2, 2), padding='same')(x)
+        x = AveragePooling3D((2, 2, 2), padding='same')(x)
         return Model(inputs=input_layer, outputs=Flatten()(x))
 
     def _molecule_pipe(self, input_shape):
         input_layer = Input(shape=input_shape)
         y = self._conv_block(input_layer, 64)
-        y = MaxPooling3D((2, 2, 2), padding='same')(y)  # Add padding='same'
+        y = AveragePooling3D((2, 2, 2), padding='same')(y)  # Add padding='same'
         y = self._residual_block(y, 128)
-        y = MaxPooling3D((2, 2, 2), padding='same')(y)
+        y = AveragePooling3D((2, 2, 2), padding='same')(y)
         return Model(inputs=input_layer, outputs=Flatten()(y))
 
     def _build_model(self):
@@ -86,7 +87,8 @@ class M1Model(Model):
         model = Model(inputs=[protein_pipe1.input, protein_pipe2.input, molecule_pipe.input], outputs=output)
 
         # Compile the model
-        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        opt = keras.optimizers.Adam(learning_rate=0.01)
+        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
         return model
     
