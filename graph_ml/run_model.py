@@ -31,14 +31,14 @@ def main():
     model.summary()
 
     # Prepare the data loader
-    train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=1)
+    train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=1000)
     val_loader = DisjointLoader(val_dataset, batch_size=4)
     test_loader = DisjointLoader(test_dataset, batch_size=4)
     
     # Train the model
-    history = model.fit(train_loader.load(), validation_data=val_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=3000)
+    history = model.fit(train_loader.load(), validation_data=val_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=1000)
 
-    model.save('graph_ml/proteins_classification_model_2023-11-19.keras')
+    model.save('graph_ml/proteins_classification_model_start_2023-11-19_1000_epochs.keras')
 
 
 if __name__ == "__main__":
