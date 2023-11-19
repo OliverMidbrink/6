@@ -25,9 +25,8 @@ adj_matrix = load_hdf5_to_numpy()
 csr_matrix = csr_matrix(adj_matrix)
 
 with h5py.File('interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5', 'w') as file:
-    # Create a dataset and save the CSR matrix
-    print(csr_matrix.data)
-    print(csr_matrix.shape)
-    dataset = file.create_dataset('csr_matrix', data=csr_matrix.data, shape=csr_matrix.shape, dtype='f')
-    dataset.attrs['indices'] = csr_matrix.indices
-    dataset.attrs['indptr'] = csr_matrix.indptr
+    # Save the data, indices, and indptr as separate datasets
+    file.create_dataset('data', data=csr_matrix.data)
+    file.create_dataset('indices', data=csr_matrix.indices)
+    file.create_dataset('indptr', data=csr_matrix.indptr)
+    file.attrs['shape'] = csr_matrix.shape
