@@ -19,7 +19,7 @@ if gpus:
 
 def main():
     print("loading model...")
-    loaded_model = tf.keras.models.load_model('graph_ml/20_proteins_classification_model.keras', custom_objects={'GCNConv': GCNConv, 'GlobalAvgPool': GlobalAvgPool})
+    #loaded_model = tf.keras.models.load_model('graph_ml/20_proteins_classification_model.keras', custom_objects={'GCNConv': GCNConv, 'GlobalAvgPool': GlobalAvgPool})
     print("loading data...")
     train_uniprot_ids, val_uniprot_ids, test_uniprot_ids = get_train_val_test_split()
     train_dataset = ProteinGraphDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors", uniprot_ids=train_uniprot_ids)
@@ -40,9 +40,9 @@ def main():
     
 
     # Train the model
-    history = loaded_model.fit(train_loader.load(), validation_data=val_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=1000)
+    history = model.fit(train_loader.load(), validation_data=val_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=1000)
 
-    loaded_model.save('graph_ml/proteins_classification_model_start_2023-11-19_1000_epochs.keras')
+    model.save('graph_ml/proteins_classification_model_start_2023-11-19_1000_epochs.keras')
 
 
 if __name__ == "__main__":
