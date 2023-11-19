@@ -3,3 +3,4 @@ pubchem_assays/
 *.pyc
 *.DS_Store*
 .vscode
+__pycache__
