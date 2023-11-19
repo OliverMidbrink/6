@@ -12,8 +12,12 @@ def create_gnn_model(n_features, n_classes):
 
     # GCN layers
     gc1 = GCNConv(256, activation='relu')([node_input, adj_input])
+    gc1 = Dropout(0.5)(gc1)
     gc1 = GCNConv(256, activation='relu')([gc1, adj_input])
+    gc1 = Dropout(0.5)(gc1)
     gc1 = GCNConv(256, activation='relu')([gc1, adj_input])
+    gc1 = Dropout(0.5)(gc1)
+
 
     # A global pooling layer to combine node features into graph features
     # The segment_ids tensor is used to perform this pooling operation
