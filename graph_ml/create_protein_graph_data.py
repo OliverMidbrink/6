@@ -5,11 +5,16 @@ from scipy.spatial import cKDTree
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 
+
+def get_uniprot_ids(af_folder="data/AlphaFoldData/"):
+    uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
+    sorted_ids = sorted(uniprot_ids)
+    print("{} unique uniprot_ids.".format(len(sorted_ids)))
+    return sorted_ids
+
 def read_hdf5(file_path):
     with h5py.File(file_path, 'r') as h5file:
         return np.array(h5file['atom_coordinates'])
-
-
 
 def save_to_hdf5(csr_graph, features, file_path):
     with h5py.File(file_path, 'w') as f:
@@ -42,6 +47,10 @@ def csr_graph_from_point_cloud(atom_point_cloud, STANDARD_BOND_LENGTH=1.5):
     return csr_graph
 
 
+def get_atom_cloud_filenames(data_path, uniprot_ids):
+    return ["AF-{}-F1-model_v4_atom_cloud.hdf5".format(x) for x in uniprot_ids]
+    
+
 def main():
     data_path = "data/protein_atom_point_clouds"
     output_dir_path = "data/protein_atom_graphs"
@@ -49,7 +58,10 @@ def main():
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
 
-    for file_name in tqdm(os.listdir(data_path), desc='Processing files', unit='file'):
+
+    unique_atom_cloud_files = get_atom_cloud_filenames(data_path, get_uniprot_ids())
+
+    for file_name in tqdm(unique_atom_cloud_files, desc='Processing files', unit='file'):
         file_path = os.path.join(data_path, file_name)
 
         atom_point_cloud = read_hdf5(file_path)

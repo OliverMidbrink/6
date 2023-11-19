@@ -1,3 +1,6 @@
 data/
 pubchem_assays/
-ExternalTools/
+*.pyc
+*.DS_Store*
+.vscode
+__pycache__
