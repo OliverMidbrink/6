@@ -40,7 +40,7 @@ def main():
     
 
     # Train the model
-    history = model.fit(train_loader.load(), validation_data=val_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=1000)
+    history = model.fit(train_loader.load(), steps_per_epoch=train_loader.steps_per_epoch, epochs=1000)
 
     model.save('graph_ml/proteins_classification_model_start_2023-11-19_1000_epochs.keras')
 
