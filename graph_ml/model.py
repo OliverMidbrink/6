@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Dropout
 from spektral.layers import GCNConv, GlobalAvgPool
+import os
 
 def create_gnn_model(n_features, n_classes):
     # Inputs
@@ -33,3 +34,17 @@ def create_gnn_model(n_features, n_classes):
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
+
+
+def get_n_uniprot_ids(af_folder="data/AlphaFoldData/"):
+    uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
+    sorted_ids = sorted(uniprot_ids)
+    print(len(sorted_ids))
+    return len(sorted_ids)
+
+def main():
+    model = create_gnn_model(4, get_n_uniprot_ids())
+    model.summary()
+
+if __name__ == "__main__":
+    main()
