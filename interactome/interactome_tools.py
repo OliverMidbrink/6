@@ -3,7 +3,7 @@ import h5py
 import os
 import random
 
-def load_csr_matrix(file_path):
+def load_HuRI_csr_matrix(file_path):
     with h5py.File(file_path, 'r') as f:
         # Load the data, indices, and indptr from the file
         data = f['data'][:]
@@ -72,7 +72,7 @@ def get_non_interacting_uniprot_ids(csr_matrix, uniprot_id_list):
 
 
 def main():
-    csr_matrix = load_csr_matrix('interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5')
+    csr_matrix = load_HuRI_csr_matrix('interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5')
     uniprot_ids_index = get_uniprot_ids()
 
     uniprots_connected = get_neighbors(csr_matrix, uniprot_ids_index, "O14718", n_steps=1)
