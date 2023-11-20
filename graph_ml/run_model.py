@@ -31,6 +31,7 @@ def main():
 
     # Create the model
     model = create_gnn_model(n_features=4, n_classes=n_classes)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
     # Prepare the data loader

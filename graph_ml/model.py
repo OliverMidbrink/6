@@ -31,7 +31,6 @@ def create_gnn_model(n_features, n_classes):
 
     # Create the model
     model = Model(inputs=[node_input, adj_input, segment_ids], outputs=output)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
 
