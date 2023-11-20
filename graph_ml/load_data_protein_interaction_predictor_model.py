@@ -55,12 +55,13 @@ def get_train_val_test_split():
     return train_uniprot_ids, val_uniprot_ids, test_uniprot_ids
 
 class ProteinPairLabelDataset(Dataset):
-    def __init__(self, graph_data_dir_path, alphabetic_id_one_hot_data_dir_path, uniprot_ids, full_uniprot_ids, uniprot_id_pairs_file_path, **kwargs):
+    def __init__(self, graph_data_dir_path, alphabetic_id_one_hot_data_dir_path, uniprot_ids, full_uniprot_ids, uniprot_id_pairs_file_path, sample=None, **kwargs):
         self.graph_data_dir_path = graph_data_dir_path
         self.alphabetic_id_one_hot_data_dir_path = alphabetic_id_one_hot_data_dir_path
         self.uniprot_ids = uniprot_ids
         self.full_uniprot_ids = full_uniprot_ids
         self.uniprot_id_pairs_file_path = uniprot_id_pairs_file_path
+        self.sample = sample
         super().__init__(**kwargs)
 
     def get_filenames(self, uniprot_id_list):
@@ -118,7 +119,12 @@ class ProteinPairLabelDataset(Dataset):
             os.makedirs("data/combined_graphs")
         
         graphs = []
-        for protein_id1, protein_id2, interaction_label in tqdm(protein_pairs_and_labels[:20], desc='Loading graph pairs', unit='pair'):
+
+        if self.sample is None:
+            go_trough = protein_pairs_and_labels
+        else:
+            go_trough = random.sample(protein_pairs_and_labels, self.sample)
+        for protein_id1, protein_id2, interaction_label in tqdm(go_trough, desc='Loading graph pairs', unit='pair'):
             combined_graph_file_path = "data/combined_graphs/{}_{}_{}.hdf5".format(protein_id1, protein_id2, interaction_label)
             if os.path.exists(combined_graph_file_path):
                 combined_graph = self.load_combined_graph_from_hdf5(combined_graph_file_path)
