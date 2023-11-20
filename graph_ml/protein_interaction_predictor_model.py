@@ -10,17 +10,20 @@ def create_protein_interaction_predictor_model(n_features):
     segment_ids = Input(shape=(None,), dtype=tf.int32, name='segment_ids')
 
     dropout_rate = 0.5
-    gc1 = GCNConv(256, activation='relu', name='gcn_conv')([node_input, adj_input])
+    gc1 = GCNConv(512, activation='relu', name='gcn_conv')([node_input, adj_input])
     gc1 = Dropout(dropout_rate)(gc1)
-    gc1 = GCNConv(256, activation='relu', name='gcn_conv_1')([gc1, adj_input])
+    gc1 = GCNConv(512, activation='relu', name='gcn_conv_1')([gc1, adj_input])
     gc1 = Dropout(dropout_rate)(gc1)
-    gc1 = GCNConv(256, activation='relu', name='gcn_conv_2')([gc1, adj_input])
+    gc1 = GCNConv(512, activation='relu', name='gcn_conv_2')([gc1, adj_input])
+    gc1 = Dropout(dropout_rate)(gc1)
+    gc1 = GCNConv(512, activation='relu', name='gcn_conv_3')([gc1, adj_input])
     gc1 = Dropout(dropout_rate)(gc1)
 
     pool = GlobalAvgPool()([gc1, segment_ids])
 
     # Final prediction layer
-    x = Dense(1000, activation='relu', name='dense1')(pool)
+    x = Dense(1024, activation='relu', name='dense1')(pool)
+    x = Dense(512, activation='relu', name='dense2')(x)
     output = Dense(1, activation='sigmoid', name='interaction_output')(x)
 
     # Create the final model
