@@ -5,7 +5,7 @@ import tensorflow as tf
 from spektral.layers import GCNConv, GlobalAvgPool
 from load_data_protein_interaction_predictor_model import ProteinPairLabelDataset, get_train_val_test_split
 from spektral.data import DisjointLoader
-import sys
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 def get_uniprot_ids(af_folder="data/AlphaFoldData/"):
     uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
@@ -42,7 +42,17 @@ def main():
     val_loader = DisjointLoader(val_dataset, batch_size=4)
     test_loader = DisjointLoader(test_dataset, batch_size=4)
 
-    history = model.fit(train_loader.load(), validation_data=val_loader.load(), validation_steps=val_loader.steps_per_epoch, steps_per_epoch=train_loader.steps_per_epoch, epochs=10000000)
+    checkpoint_path = "graph_ml/best_protein_interaction_model.h5"
+    checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+
+    history = model.fit(
+        train_loader.load(),
+        validation_data=val_loader.load(),
+        validation_steps=val_loader.steps_per_epoch,
+        steps_per_epoch=train_loader.steps_per_epoch,
+        epochs=10000000,
+        callbacks=[checkpoint]  # Add the checkpoint callback here
+    )
 
     model.save('graph_ml/proteins_interaction_predictor_model_start_2023-11-19_1000_epochs.keras')
 
