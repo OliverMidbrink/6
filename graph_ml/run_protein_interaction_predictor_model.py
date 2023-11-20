@@ -16,7 +16,7 @@ def get_uniprot_ids(af_folder="data/AlphaFoldData/"):
 
 def main():
     # Load the pre-trained model
-    pretrained_model = tf.keras.models.load_model('graph_ml/20_proteins_classification_model.keras', custom_objects={'GCNConv': GCNConv, 'GlobalAvgPool': GlobalAvgPool})
+    #pretrained_model = tf.keras.models.load_model('graph_ml/20_proteins_classification_model.keras', custom_objects={'GCNConv': GCNConv, 'GlobalAvgPool': GlobalAvgPool})
 
     # Create the new model
     model = create_protein_interaction_predictor_model(4)
