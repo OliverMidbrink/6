@@ -3,7 +3,7 @@ import h5py
 import os
 import random
 
-def load_HuRI_csr_matrix(file_path):
+def load_HuRI_csr_matrix(file_path='interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5'):
     with h5py.File(file_path, 'r') as f:
         # Load the data, indices, and indptr from the file
         data = f['data'][:]
@@ -20,14 +20,14 @@ def get_uniprot_ids(af_folder="data/AlphaFoldData/"):
     return sorted_ids
 
 
-def get_neighbors(csr_matrix, uniprot_ids, uniprot_id, n_steps=1):
+def get_neighbors(csr_matrix, uniprot_ids, full_uniprot_ids, n_steps=1):
     # Create a mapping from UniProt IDs to indices
     uniprot_to_index = {uniprot_id: index for index, uniprot_id in enumerate(uniprot_ids)}
     # Create a reverse mapping from indices to UniProt IDs
     index_to_uniprot = {index: uniprot_id for uniprot_id, index in uniprot_to_index.items()}
     
     # Get the index for the given UniProt ID
-    matrix_index = uniprot_to_index[uniprot_id]
+    matrix_index = uniprot_to_index[full_uniprot_ids]
     neighbors = set([matrix_index])
     
     # Perform breadth-first search to the n-th degree
@@ -46,6 +46,33 @@ def get_neighbors(csr_matrix, uniprot_ids, uniprot_id, n_steps=1):
     neighbor_uniprot_ids = [index_to_uniprot[n] for n in neighbors if n in index_to_uniprot]
     
     return neighbor_uniprot_ids
+
+def get_neighbors_from_uniprot_ids(csr_matrix, full_uniprot_ids, uniprot_ids, uniprot_id, n_steps=1):
+    # Create a mapping from UniProt IDs to indices
+    uniprot_to_index = {uid: index for index, uid in enumerate(full_uniprot_ids)}
+    
+    # Get the index for the given UniProt ID
+    matrix_index = uniprot_to_index[uniprot_id]
+    neighbors_indices = set([matrix_index])
+    
+    # Perform breadth-first search to the n-th degree
+    for _ in range(n_steps):
+        current_neighbors_indices = list(neighbors_indices)
+        neighbors_indices.update(
+            index for node_index in current_neighbors_indices
+            for index in csr_matrix[node_index].indices
+        )
+    
+    # Remove the original node's index to exclude it from its neighbors
+    neighbors_indices.discard(matrix_index)
+    
+    # Map indices back to UniProt IDs
+    neighbor_uniprot_ids = [full_uniprot_ids[idx] for idx in neighbors_indices if idx in full_uniprot_ids]
+    
+    # Filter out non-interacting neighbors
+    interacting_neighbors = [uid for uid in neighbor_uniprot_ids if uid in uniprot_ids]
+
+    return interacting_neighbors
 
 def get_interacting_uniprot_ids(csr_matrix, uniprot_id_list):
     random_uniprot = random.choice(uniprot_id_list)
@@ -70,9 +97,8 @@ def get_non_interacting_uniprot_ids(csr_matrix, uniprot_id_list):
 
     return random_uniprot, random.choice(list(non_neighbor_uniprots))
 
-
 def main():
-    csr_matrix = load_HuRI_csr_matrix('interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5')
+    csr_matrix = load_HuRI_csr_matrix()
     uniprot_ids_index = get_uniprot_ids()
 
     uniprots_connected = get_neighbors(csr_matrix, uniprot_ids_index, "O14718", n_steps=1)
