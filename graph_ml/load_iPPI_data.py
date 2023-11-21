@@ -51,13 +51,10 @@ class iPPIDataset(Dataset):
 
         graph_files = sorted(os.listdir(graph_dataset_file))
 
-        for graph_file in tqdm(graph_files[:10], desc="Loading {} files.".format(self.mode), unit="graphs"):
+        for graph_file in tqdm(graph_files[:20], desc="Loading {} files.".format(self.mode), unit="graphs"):
             file_name = os.path.join(graph_dataset_file, graph_file)
             graph = load_graph_from_hdf5(file_name)
             graphs.append(graph)
-
-            print(file_name)
-            print(graph)
 
         return graphs
 

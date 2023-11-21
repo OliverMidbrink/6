@@ -15,7 +15,7 @@ def main():
     train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=100)
     val_loader = DisjointLoader(val_dataset, batch_size=4)
 
-    checkpoint_path = "graph_ml/checkpoint_iPPI_model.keras"
+    checkpoint_path = "graph_ml/checkpoint_iPPI_model.h5"
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
 
     model.fit(
