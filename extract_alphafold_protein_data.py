@@ -25,7 +25,7 @@ def extract_files_by_uniprot_id_and_return_pdb_filenames(folder_path, uniprot_id
             with gzip.open(file, 'rb') as f_in:
                 with open(output_file, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
-            print(f"Extracted: {output_file}")
+            #print(f"Extracted: {output_file}")
             if output_file.endswith('.pdb'):
                 pdb_file_paths.append(output_file)
 
@@ -53,8 +53,11 @@ atom_type_mapping = {
     'N': 2,  # Nitrogen
     'O': 3,  # Oxygen
     'S': 4,  # Sulfur
-    'H': 5,  # Hydrogen
-    # Add more elements if needed
+    'P': 5,  # Phosphorus
+    'F': 6,  # Fluorine
+    'Cl': 7, # Chlorine
+    'Br': 8, # Bromine
+    'I': 9,  # Iodine
 }
 
 def get_atom_type_numeric(atom_type):
@@ -96,7 +99,7 @@ def extract_files_by_uniprot_id_and_return_pdb_filenames(folder_path, uniprot_id
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    pattern = os.path.join(folder_path, f"AF-{uniprot_id}-F*-model_v4.pdb.gz")
+    pattern = os.path.join(folder_path, f"AF-{uniprot_id}-F1-model_v4.pdb.gz")
     files = glob.glob(pattern)
     pdb_file_paths = []
 
@@ -106,7 +109,7 @@ def extract_files_by_uniprot_id_and_return_pdb_filenames(folder_path, uniprot_id
             with gzip.open(file, 'rb') as f_in:
                 with open(output_file, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
-            print(f"Extracted: {output_file}")
+            #print(f"Extracted: {output_file}")
             if output_file.endswith('.pdb'):
                 pdb_file_paths.append(output_file)
 
