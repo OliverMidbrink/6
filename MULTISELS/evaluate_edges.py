@@ -75,8 +75,8 @@ def main():
 
     edges_to_evaluate = get_neighbors_from_uniprots(get_HuRI_table_as_uniprot_edge_list(), interesting_uniprot_ids, n_step_neighbors=1)
 
-    tuples = evaluate_edges(edges_to_evaluate)
-    print(tuples)
+    #tuples = evaluate_edges(edges_to_evaluate)
+    print(edges_to_evaluate)
 
 if __name__ == "__main__":
     main()
