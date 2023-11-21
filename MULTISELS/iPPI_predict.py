@@ -38,6 +38,10 @@ def load_graph_from_hdf5(file_path):
     return graph
 
 
+def get_combined_graph_from_uniprot_and_smiles():
+    pass
+
+
 def predict(graphs):
     model = load_model("graph_ml/checkpoint_iPPI_model.h5", custom_objects={'GCNConv': GCNConv, 'GlobalAvgPool': GlobalAvgPool})
     
