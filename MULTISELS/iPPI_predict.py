@@ -57,15 +57,14 @@ def predict(graphs):
 def main():
     graphs = []
     labels = []
-    file_name = "data/iPPI_graphs/train_graphs/"
-    for file in random.sample(sorted(list(os.listdir(file_name))), 1000):
+    file_name = "data/iPPI_graphs/test_graphs/"
+    for file in random.sample(sorted(list(os.listdir(file_name))), len(sorted(list(os.listdir(file_name))))):
         graph = load_graph_from_hdf5(os.path.join(file_name, file))
         label = int(file.split("_iPPI_")[1][0])
         labels.append(label)
         graphs.append(graph)
 
 
-    y = [float(x[0]) for x in predict(graphs)]
     print(np.array(labels).mean())
     
     """
