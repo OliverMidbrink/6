@@ -8,6 +8,42 @@ import numpy as np
 from scipy.sparse.csgraph import connected_components
 from itertools import combinations_with_replacement
 
+def is_in_DLiP(uniprot_pair_list, smiles, DLiP_data):
+    for DLiP_value in DLiP_data.values():
+        if set(DLiP_value["proteins"]) == set(uniprot_pair_list): # If PPI pair is in DLiP, skip
+            return True
+    return False
+
+def in_HuRI(uniprot_pair_list):
+    # TODO COMPLETE THIS
+    return True
+
+def get_non_iPPIs(n, DLiP_keys, DLiP_data):
+    # Uniprots and smiles from only the DLiP_keys
+    uniprots = get_uniprots(DLiP_keys, DLiP_data)
+    smiles = get_smiles(DLiP_keys, DLiP_data)
+
+    all_combs = list(combinations_with_replacement(uniprots, 2))
+    random.shuffle(all_combs)
+
+    non_iPPIs = set()
+
+    for uniprot_pair in all_combs:
+        uniprot_pair_list = list(uniprot_pair)
+        # Get a random uniprot_pair (including homo pairs)
+        # Get a smiles
+        random_smiles = random.choice(list(smiles))
+
+        if in_HuRI(uniprot_pair_list): # If it is a known interaction
+            if not is_in_DLiP(uniprot_pair_list, smiles, DLiP_data): # Assume it is not an iPPI and add
+                non_iPPI = (uniprot_pair_list[0], uniprot_pair_list[1], random_smiles)
+                non_iPPIs.add(non_iPPI)
+
+                if len(non_iPPIs) == n:
+                    break
+        
+    return non_iPPIs
+
 def get_DLiP_ids_from_nodes(train_nodes, DLiP_data):
     DLiP_ids = set()
 
@@ -96,6 +132,12 @@ def get_subgraph_nodes_from_edgelist(edge_list):
     
     return subgraph_node_sets
 
+def get_smiles(DLiP_keys, DLiP_data):
+    smiles = set()
+    for key in DLiP_keys:
+        smiles.add(DLiP_data[key]["SMILES"][0])
+    return smiles
+
 def get_uniprots(keys, DLiP_data):
     proteins = set()
     for key in keys:
@@ -144,17 +186,57 @@ def main():
     # Inflate datasets with equal amount of non interacting
 
     # Assume if a molecule is not associated with a pair, it does not inhibit that pair.[Assumption] to create negative training data
+    # Fill in with equal amount of assumed non iPPI prot pairs + mol
     train_PPI_molecules = {}
     id_count = 0
     for DLiP_id in train_DLiP_ids:
         # Positive iPPI, molecule inhibits interaction
-        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0]} # 0 for the canonical RdKit smiles
+        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
         train_PPI_molecules[id_count] = iPPI
-        id_count += 1
+        id_count += 2
     
-    get_non_iPPIs(id_count + 1, train_uniprots)
+    id_count = 1
+    for non_iPPI in get_non_iPPIs(len(train_DLiP_ids), train_DLiP_ids, DLiP_data):
+        iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
+        train_PPI_molecules[id_count] = iPPI
+        id_count += 2
+    
+    
+    val_PPI_molecules = {}
+    id_count = 0
+    for DLiP_id in val_DLiP_ids:
+        # Positive iPPI, molecule inhibits interaction
+        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
+        val_PPI_molecules[id_count] = iPPI
+        id_count += 2
+    
+    id_count = 1
+    for non_iPPI in get_non_iPPIs(len(val_DLiP_ids), val_DLiP_ids, DLiP_data):
+        iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
+        val_PPI_molecules[id_count] = iPPI
+        id_count += 2
 
-    # Fill in with equal amount of assumed non iPPI prot pairs + mol
+    
+    test_PPI_molecules = {}
+    id_count = 0
+    for DLiP_id in test_DLiP_ids:
+        # Positive iPPI, molecule inhibits interaction
+        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
+        test_PPI_molecules[id_count] = iPPI
+        id_count += 2
+    
+    id_count = 1
+    for non_iPPI in get_non_iPPIs(len(test_DLiP_ids), test_DLiP_ids, DLiP_data):
+        iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
+        test_PPI_molecules[id_count] = iPPI
+        id_count += 2
+
+    # Now we have the following dicts
+    # train_PPI_molecules
+    # val_PPI_molecules
+    # test_PPI_molecules
+
+    
 
 if __name__ == "__main__":
     main()
