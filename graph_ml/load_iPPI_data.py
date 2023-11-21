@@ -19,7 +19,7 @@ def load_graph_from_hdf5(file_path):
         adjacency = csr_matrix((data, indices, indptr), shape=shape)
 
         # Load the labels or targets if they exist
-        label = f['labels'] if 'labels' in f else None
+        label = f['labels'][:] if 'labels' in f else None
 
     # Create the Spektral Graph object
     graph = Graph(x=features, a=adjacency, y=label)
@@ -51,18 +51,22 @@ class iPPIDataset(Dataset):
 
         graph_files = sorted(os.listdir(graph_dataset_file))
 
-        for graph_file in tqdm(graph_files, desc="Loading {} files.".format(self.mode), unit="graphs"):
-            graph = load_graph_from_hdf5(os.path.join(graph_dataset_file, graph_file))
+        for graph_file in tqdm(graph_files[:10], desc="Loading {} files.".format(self.mode), unit="graphs"):
+            file_name = os.path.join(graph_dataset_file, graph_file)
+            graph = load_graph_from_hdf5(file_name)
             graphs.append(graph)
+
+            print(file_name)
+            print(graph)
 
         return graphs
 
 
-def train_generator():
-    train_data_path = "data/iPPI_graphs/train_graphs"
-    train_files = sorted(os.listdir(train_data_path))
+def main():
+    file_name = "data/iPPI_graphs/train_graphs/"
+    file_name = os.path.join(file_name, os.listdir(file_name)[0])
+    graph = load_graph_from_hdf5(file_name)
+    print(graph)
 
-    for train_file in train_files:
-        graph = load_graph_from_hdf5(os.path.join(train_data_path, train_file))
-
-        yield [graph]
+if __name__ == "__main__":
+    main()
