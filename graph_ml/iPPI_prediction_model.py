@@ -22,7 +22,7 @@ def create_iPPI_prediction_model(n_features=9):
 
     # Final prediction layer
     x = Dense(1000, activation='relu', name='dense1')(pool)
-    output = Dense(2, activation='sigmoid', name='interaction_output')(x)
+    output = Dense(1, activation='sigmoid', name='iPPI_output')(x)
 
     # Create the final model
     model = Model(inputs=[node_input, adj_input, segment_ids],
