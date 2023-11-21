@@ -21,6 +21,9 @@ def download_all():
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()  # Anonymous login
 
+        # Change to the target directory for JSON files
+        ftp.cwd('/pubchem/Bioassay/JSON/')
+
         # Get a list of files in the directory
         files = ftp.nlst('*.zip')  # Adjust pattern as needed
 
