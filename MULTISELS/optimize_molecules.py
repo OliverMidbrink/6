@@ -40,8 +40,10 @@ def main():
 
     for smile in smiles_subset:
         for tuple in tuples:
-            iPPI_prop = predict_from_uniprots_and_smiles(tuple[0], tuple[1], smile, model) 
-            print(iPPI_prop)
+            iPPI_prob = predict_from_uniprots_and_smiles(tuple[0], tuple[1], smile, model)
+            if iPPI_prob is not None:
+                iPPI_prob = iPPI_prob[0][0]
+                print(iPPI_prob)
     for x in tuples:
         pass
 if __name__ == "__main__":

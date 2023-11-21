@@ -33,11 +33,16 @@ def get_combined_graph(uniprot_A, uniprot_B, smiles):
     prot_B_graph_filename = 'data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(uniprot_B)
     mol_graph_filename = 'data/mol_graphs/{}_graph.hdf5'.format(smiles)
     if not os.path.exists(prot_A_graph_filename) or not os.path.exists(prot_B_graph_filename) or not os.path.exists(mol_graph_filename):
-        print("One of the files do not exist:")
+        """ Often the AF is the one not in the data.
+        if not os.path.exists(prot_A_graph_filename):
+            print(prot_A_graph_filename + " did not exist")
+        if not os.path.exists(prot_B_graph_filename):
+            print(prot_B_graph_filename + " did not exist")
+        if not os.path.exists(mol_graph_filename):
+            print(mol_graph_filename + " did not exist")
+        """
         return None
-    else:
-        print("did exist")
-
+    
     csr_protA, feat_protA = load_graph(prot_A_graph_filename)
     csr_protB, feat_protB = load_graph(prot_B_graph_filename)
     csr_mol, feat_mol = load_graph(mol_graph_filename)
@@ -49,7 +54,7 @@ def get_combined_graph(uniprot_A, uniprot_B, smiles):
     combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
     # Create a Spektral Graph object
-    combined_graph = Graph(x=combined_features, a=combined_adjacency)
+    combined_graph = Graph(x=combined_features, a=combined_adjacency, y=-1)
 
     return combined_graph
 
@@ -92,7 +97,7 @@ def predict(graphs, model):
     dataset = PredDataset(graphs=graphs)
     loader = DisjointLoader(dataset, batch_size=1, epochs=1)
 
-    y = model.predict(loader.load())
+    y = model.predict(loader.load(), verbose=0)
     return y
 
 def main():
