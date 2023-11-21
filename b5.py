@@ -51,15 +51,6 @@ def extract_info_from_json(json_data):
 
 # Function to fetch data from UniProt
 def fetch_uniprot_data(protein_id):
-    """
-    Fetches data from UniProt for the given protein ID.
-    
-    Args:
-    protein_id (str): UniProt ID of the protein.
-    
-    Returns:
-    dict: JSON response from UniProt containing the protein data.
-    """
     try:
         url = f"https://www.ebi.ac.uk/proteins/api/proteins/{protein_id}"
         headers = {"Accept": "application/json"}
