@@ -289,7 +289,7 @@ def main():
             combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
             # Create a Spektral Graph object
-            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array([iPPI["iPPI"]], dtype=np.float32))
 
             save_graph_to_hdf5(graph, file_name)
         except:
@@ -319,7 +319,7 @@ def main():
             combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
             # Create a Spektral Graph object
-            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array([iPPI["iPPI"]], dtype=np.float32))
 
             save_graph_to_hdf5(graph, file_name)
         except:
@@ -347,7 +347,7 @@ def main():
             combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
             # Create a Spektral Graph object
-            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array([iPPI["iPPI"]], dtype=np.float32))
 
             save_graph_to_hdf5(graph, file_name)
         except:
