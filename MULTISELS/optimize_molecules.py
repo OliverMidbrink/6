@@ -48,7 +48,7 @@ def main():
         return None
 
     model = get_model()
-    smiles_subset = random.sample(get_smiles(), 100)
+    smiles_subset = random.sample(get_smiles(), 10)
 
     smile_scores = {}
     id = 0
@@ -58,12 +58,12 @@ def main():
             iPPI_prob = predict_from_uniprots_and_smiles(tuple[0], tuple[1], smile, model)
             if iPPI_prob is not None:
                 iPPI_prob = iPPI_prob[0][0]
-                print(iPPI_prob)
+                #print(iPPI_prob)
             
                 smile_score += iPPI_prob * tuple[2]
                 print("Added {} to score.".format(iPPI_prob * tuple[2]))
             else:
-                pass
+                print("Could not analyze")
                 #smile_score += 0.5 * tuple[2]
                 #print("Assumed 0.5 iPPI_prob and added {} to score.".format(0.5 * tuple[2]))
         
