@@ -48,7 +48,7 @@ def main():
         return None
 
     model = get_model()
-    smiles_subset = random.sample(get_smiles(), 10)
+    smiles_subset = random.sample(get_smiles(), 100)
 
     smile_scores = {}
     id = 0
@@ -61,7 +61,7 @@ def main():
                 #print(iPPI_prob)
             
                 smile_score += iPPI_prob * tuple[2]
-                print("Added {} to score.".format(iPPI_prob * tuple[2]))
+                #print("Added {} to score.".format(iPPI_prob * tuple[2]))
             else:
                 print("Could not analyze")
                 #smile_score += 0.5 * tuple[2]
