@@ -68,7 +68,7 @@ def main():
 
         # Assuming the atom types are in the first column of the point cloud array
         atom_point_cloud_atom_types = atom_point_cloud[:, 0]  # Changed from :1 to 0 for correct indexing
-        n_atom_types = 4
+        n_atom_types = 9
 
         # One-hot encode the atom types
         features = np.eye(n_atom_types)[atom_point_cloud_atom_types.astype(int) - 1]  # Make sure the types are integers
