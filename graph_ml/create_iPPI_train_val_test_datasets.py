@@ -5,6 +5,7 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.sparse.csgraph import connected_components
 
 def plot_graph(G):
     # The graph to visualize
@@ -43,33 +44,43 @@ def _format_axes(ax):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
-
-
-def create_csr_graph(edge_list):
-    # Flatten the list of edges and determine unique nodes
-    nodes = set([node for edge in edge_list for node in edge])
+def get_subgraph_nodes_from_edgelist(edge_list):
+    # Create a set of all nodes
+    nodes = set(node for edge in edge_list for node in edge)
     # Create a mapping from node names to integers
     node_to_idx = {node: idx for idx, node in enumerate(nodes)}
+    # Inverse mapping to retrieve node names from indices
+    idx_to_node = {idx: node for node, idx in node_to_idx.items()}
     
-    # Initialize lists to store the CSR data
-    row_indices = []
-    col_indices = []
+    # Initialize lists to store the edges in terms of indices
     data = []
+    rows = []
+    cols = []
     
-    # Populate the lists with edge data
+    # Populate the edge index lists
     for edge in edge_list:
-        row_indices.append(node_to_idx[edge[0]])
-        col_indices.append(node_to_idx[edge[1]])
-        data.append(1)  # Assuming an unweighted graph
-
-        # For undirected graphs, add the edge in the other direction
-        row_indices.append(node_to_idx[edge[1]])
-        col_indices.append(node_to_idx[edge[0]])
-        data.append(1)  # Assuming an unweighted graph
-
+        src, dst = edge
+        rows.append(node_to_idx[src])
+        cols.append(node_to_idx[dst])
+        data.append(1)  # Assuming unweighted graph, use 1 as the placeholder for edge existence
+    
+    # Number of nodes
+    n_nodes = len(nodes)
     # Create the CSR matrix
-    graph_csr = csr_matrix((data, (row_indices, col_indices)), shape=(len(nodes), len(nodes)))
-    return graph_csr
+    csr_graph = csr_matrix((data, (rows, cols)), shape=(n_nodes, n_nodes))
+    
+    # Find the connected components
+    n_components, labels = connected_components(csgraph=csr_graph, directed=False, return_labels=True)
+    
+    # Group node indices by their component label
+    subgraphs = {i: set() for i in range(n_components)}
+    for node_idx, component_label in enumerate(labels):
+        subgraphs[component_label].add(idx_to_node[node_idx])
+    
+    # Convert the dictionary to a list of sets of node names
+    subgraph_node_sets = list(subgraphs.values())
+    
+    return subgraph_node_sets
 
 def get_uniprots(keys, DLiP_data):
     proteins = set()
@@ -91,11 +102,19 @@ def main():
     
     edge_list = [x["proteins"] for x in DLiP_data.values()]
     
-    csr_graph = create_csr_graph(edge_list)
+    # Create a graph of all the interactions. And every cluster (interacting proteins) create a set of the uniprot_ids
+    sub_graph_nodes = get_subgraph_nodes_from_edgelist(edge_list)
+    random.shuffle(sub_graph_nodes)
 
-    print(csr_graph)
+    train_val_split = int(len(sub_graph_nodes) * 0.8)
+    val_test_split = int(len(sub_graph_nodes) * 0.9)
+
+    train_nodes = sub_graph_nodes[:train_val_split]
+    val_nodes = sub_graph_nodes[train_val_split:val_test_split]
+    test_nodes = sub_graph_nodes[val_test_split:]
+
+    print(get_DLiP_ids_from_nodes(train_nodes, ))
     
-    plot_graph(csr_graph)
 
     # Fill in with equal amount of assumed non iPPI prot pairs + mol
 
