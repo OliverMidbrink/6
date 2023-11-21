@@ -138,10 +138,21 @@ def main():
 
     print(set(train_DLiP_ids) & set(val_DLiP_ids) & set(test_DLiP_ids)) # Check for DLiP ids that are on multiple sets
     print(len(set(train_DLiP_ids) | set(val_DLiP_ids) | set(test_DLiP_ids))) # Check number of DLiP ids in total
-    print(set(train_uniprots) & set(val_uniprots) & set(test_uniprots)) # Check for overlapping prot ids:
+    print(set(train_uniprots) & set(val_uniprots) & set(test_uniprots)) # Check for overlapping prot ids
 
+    # DLiP ids are successfully split if program returns set(), 7021, set()
+    # Inflate datasets with equal amount of non interacting
+
+    # Assume if a molecule is not associated with a pair, it does not inhibit that pair.[Assumption] to create negative training data
+    train_PPI_molecules = {}
+    id_count = 0
+    for DLiP_id in train_DLiP_ids:
+        # Positive iPPI, molecule inhibits interaction
+        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0]} # 0 for the canonical RdKit smiles
+        train_PPI_molecules[id_count] = iPPI
+        id_count += 1
     
-
+    get_non_iPPIs(id_count + 1, train_uniprots)
 
     # Fill in with equal amount of assumed non iPPI prot pairs + mol
 
