@@ -12,8 +12,8 @@ def main():
     train_dataset = iPPIDataset(mode="train")
     val_dataset = iPPIDataset(mode="val")
 
-    train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=100000)
-    val_loader = DisjointLoader(val_dataset, batch_size=4)
+    train_loader = DisjointLoader(train_dataset, batch_size=50, epochs=100000)
+    val_loader = DisjointLoader(val_dataset, batch_size=50)
 
     checkpoint_path = "graph_ml/checkpoint_iPPI_model.h5"
     checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
