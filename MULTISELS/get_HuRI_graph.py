@@ -4,33 +4,28 @@ import pandas as pd
 from tqdm import tqdm
 from scipy.sparse.csgraph import connected_components
 import json
+from collections import defaultdict
+from scipy.sparse.csgraph import breadth_first_order
+import networkx as nx
 
-def get_subgraph_nodes_from_edgelist(edge_list):
-    # Create a set of all nodes
-    nodes = set(node for edge in edge_list for node in edge)
-    # Create a mapping from node names to integers
-    node_to_idx = {node: idx for idx, node in enumerate(nodes)}
-    # Inverse mapping to retrieve node names from indices
-    idx_to_node = {idx: node for node, idx in node_to_idx.items()}
+def get_neighbors_from_edgelist(edge_list, uniprot_ids, n_neighbors=3):
+    # Create a graph from the edge list
+    G = nx.Graph()
+    G.add_edges_from(edge_list)
     
-    # Initialize lists to store the edges in terms of indices
-    data = []
-    rows = []
-    cols = []
+    # Find all neighbors for each UniProt ID up to n_neighbors away
+    uniprot_edges_of_n_neighbors = []
+    for uniprot_id in uniprot_ids:
+        if uniprot_id in G:
+            # Get all nodes within n_neighbors hops from uniprot_id
+            neighbors = nx.single_source_shortest_path_length(G, uniprot_id, cutoff=n_neighbors)
+            # Get edges between uniprot_id and its neighbors
+            for neighbor, distance in neighbors.items():
+                if distance > 0:  # Exclude self-loops
+                    uniprot_edges_of_n_neighbors.append((uniprot_id, neighbor))
     
-    # Populate the edge index lists
-    for edge in edge_list:
-        src, dst = edge
-        rows.append(node_to_idx[src])
-        cols.append(node_to_idx[dst])
-        data.append(1)  # Assuming unweighted graph, use 1 as the placeholder for edge existence
-    
-    # Number of nodes
-    n_nodes = len(nodes)
-    # Create the CSR matrix
-    csr_graph = csr_matrix((data, (rows, cols)), shape=(n_nodes, n_nodes))
-    
-    return csr_graph
+    return uniprot_edges_of_n_neighbors
+
 
 def uniprot_list_from_ensg(ensg, df_idmappings):
     uniprots = list(df_idmappings.loc[df_idmappings["From"] == ensg]["Entry"])
