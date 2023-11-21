@@ -38,7 +38,7 @@ def main():
     full_uniprot_ids = get_uniprot_ids()
     train_uniprot_ids, val_uniprot_ids, test_uniprot_ids = get_train_val_test_split()
     train_dataset = ProteinPairLabelDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors", uniprot_ids=train_uniprot_ids, full_uniprot_ids=full_uniprot_ids, uniprot_id_pairs_file_path="graph_ml/train_uniprot_pairs.json", sample=1000)
-    val_dataset = ProteinPairLabelDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors", uniprot_ids=val_uniprot_ids, full_uniprot_ids=full_uniprot_ids, uniprot_id_pairs_file_path="graph_ml/val_uniprot_pairs.json")
+    val_dataset = ProteinPairLabelDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors", uniprot_ids=val_uniprot_ids, full_uniprot_ids=full_uniprot_ids, uniprot_id_pairs_file_path="graph_ml/val_uniprot_pairs.json", sample = 500)
     #test_dataset = ProteinPairLabelDataset(graph_data_dir_path="data/protein_atom_graphs", alphabetic_id_one_hot_data_dir_path="data/protein_one_hot_id_vectors", uniprot_ids=test_uniprot_ids, full_uniprot_ids=full_uniprot_ids, uniprot_id_pairs_file_path="graph_ml/test_uniprot_pairs.json")
 
     train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=10000000)
