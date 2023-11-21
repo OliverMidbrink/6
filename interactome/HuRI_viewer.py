@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import h5py
 
+# TODO FIX THIS SCRIPT BECAUSE IT DOES NOT WORK!
+
 def plot_graph(G):
     # The graph to visualize
     G = nx.from_scipy_sparse_array(G)

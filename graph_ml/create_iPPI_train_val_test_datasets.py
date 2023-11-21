@@ -6,6 +6,20 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse.csgraph import connected_components
+from itertools import combinations_with_replacement
+
+def get_DLiP_ids_from_nodes(train_nodes, DLiP_data):
+    DLiP_ids = set()
+
+    for uniprot_PPI_set in train_nodes:
+        for uniprot_pair in list(combinations_with_replacement(uniprot_PPI_set, 2)):
+            # Check if pair is in DLiP and add in that case
+            for value in DLiP_data.values():
+                pair = value["proteins"]
+                if set(pair) == set(uniprot_pair):
+                    DLiP_ids.add(value["compound_id"]) # incorrectly labeled as compound id but it is actually DLiP id
+    
+    return DLiP_ids
 
 def plot_graph(G):
     # The graph to visualize
@@ -113,8 +127,21 @@ def main():
     val_nodes = sub_graph_nodes[train_val_split:val_test_split]
     test_nodes = sub_graph_nodes[val_test_split:]
 
-    print(get_DLiP_ids_from_nodes(train_nodes, ))
+    train_DLiP_ids = get_DLiP_ids_from_nodes(train_nodes, DLiP_data)
+    val_DLiP_ids = get_DLiP_ids_from_nodes(val_nodes, DLiP_data)
+    test_DLiP_ids = get_DLiP_ids_from_nodes(test_nodes, DLiP_data)
+
+    train_uniprots = get_uniprots(train_DLiP_ids, DLiP_data)
+    val_uniprots = get_uniprots(val_DLiP_ids, DLiP_data)
+    test_uniprots = get_uniprots(test_DLiP_ids, DLiP_data)
+
+
+    print(set(train_DLiP_ids) & set(val_DLiP_ids) & set(test_DLiP_ids)) # Check for DLiP ids that are on multiple sets
+    print(len(set(train_DLiP_ids) | set(val_DLiP_ids) | set(test_DLiP_ids))) # Check number of DLiP ids in total
+    print(set(train_uniprots) & set(val_uniprots) & set(test_uniprots)) # Check for overlapping prot ids:
+
     
+
 
     # Fill in with equal amount of assumed non iPPI prot pairs + mol
 
