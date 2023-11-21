@@ -1,5 +1,9 @@
 from get_random_edge_sample import get_random_edge_sample
 from openai import OpenAI
+import requests
+import sys
+import pandas as pd
+from get_HuRI_graph import get_neighbors_from_uniprots, get_HuRI_table_as_uniprot_edge_list
 
 def ask_gpt(input_text, prompt, model, client):
     gpt_response = client.chat.completions.create(
@@ -13,12 +17,34 @@ def ask_gpt(input_text, prompt, model, client):
     )
     return gpt_response.choices[0].message.content
 
+def fetch_uniprot_data(protein_id):
+    try:
+        url = f"https://www.ebi.ac.uk/proteins/api/proteins/{protein_id}"
+        headers = {"Accept": "application/json"}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+
+            return data
+        else:
+            print(f"Failed to fetch data for: {protein_id}, Status code: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"An error occurred for UniProt ID {protein_id}: {e}")
+        return None
+
+def get_uniprot_data(uniprot_id):
+    df_idmappings = pd.read_table("interactome/idmapping_2023_11_18.tsv")
+    uniprot_information = df_idmappings.loc[df_idmappings["Entry"] == uniprot_id].values.tolist()
+    return uniprot_information
 
 def evaluate_edge_helpfullness(edge, instruction, client):
     iPPI_helpfullness = None
 
     while iPPI_helpfullness is None:
-        gpt_evaluation = ask_gpt(str(edge) + ":: Only give the number as the answer.", "From -100 to 100. 100 = very helpful, -100 = avoid. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated guess and only respond with the number) Think about the whole interactome and all the effects it has in many steps: {}".format(instruction), "gpt-3.5-turbo", client)
+        gpt_input = str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein (could be interacting with the same protein) is\n\n\n" + str(get_uniprot_data(edge[1]))
+        gpt_prompt = "From -100 to 100. 100 = should inhibit, -100 = do not inhibit. 0 for no knowledge. Just respond with the number. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated using your comprehensive biological knowledge) (if you cant decide just enter -10 to 10): {}".format(instruction)
+        gpt_evaluation = ask_gpt(gpt_input, gpt_prompt, "gpt-3.5-turbo", client)
         print(gpt_evaluation)
         try:
             iPPI_helpfullness = float(gpt_evaluation) / 100
@@ -45,7 +71,9 @@ def evaluate_edges(edge_list):
     return tuples
 
 def main():
-    edges_to_evaluate = get_random_edge_sample(n=10)
+    interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
+
+    edges_to_evaluate = get_neighbors_from_uniprots(get_HuRI_table_as_uniprot_edge_list(), interesting_uniprot_ids, n_step_neighbors=1)
 
     tuples = evaluate_edges(edges_to_evaluate)
     print(tuples)
