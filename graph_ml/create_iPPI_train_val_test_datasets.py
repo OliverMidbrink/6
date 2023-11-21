@@ -8,6 +8,38 @@ import numpy as np
 from scipy.sparse.csgraph import connected_components
 from itertools import combinations_with_replacement
 from tqdm import tqdm
+import h5py
+from spektral.data import Graph
+from scipy.sparse import block_diag, hstack, vstack
+
+def save_graph_to_hdf5(graph, file_path):
+    csr_adjacency = graph.a.tocsr() if not isinstance(graph.a, csr_matrix) else graph.a
+
+    with h5py.File(file_path, 'w') as f:
+        # Save the features matrix
+        f.create_dataset('features', data=graph.x)
+        # Save the adjacency matrix in CSR format
+        f.create_dataset('data', data=csr_adjacency.data)
+        f.create_dataset('indices', data=csr_adjacency.indices)
+        f.create_dataset('indptr', data=csr_adjacency.indptr)
+        f.create_dataset('shape', data=csr_adjacency.shape)
+        # Save the labels or targets if they exist
+        if hasattr(graph, 'y') and graph.y is not None:
+            f.create_dataset('labels', data=graph.y)
+
+def load_from_hdf5(file_path):
+    with h5py.File(file_path, 'r') as f:
+        # Load the features matrix
+        features = f['features'][:]
+        # Load the CSR components
+        data = f['data'][:]
+        indices = f['indices'][:]
+        indptr = f['indptr'][:]
+        shape = f['shape'][:]
+        # Create the CSR matrix
+        csr_graph = csr_matrix((data, indices, indptr), shape=shape)
+    
+    return csr_graph, features
 
 def is_in_DLiP(uniprot_pair_list, smiles, DLiP_data):
     for DLiP_value in DLiP_data.values():
@@ -238,18 +270,84 @@ def main():
     # test_PPI_molecules
 
     train_path = "data/iPPI_graphs/train_graphs"
-    os.makedirs(train_path)
+    if not os.path.exists(train_path):
+        os.makedirs(train_path)
+    skipped = 0
     for key in tqdm(sorted(list(train_PPI_molecules.keys())), desc="Saving training data", unit="c_graphs"):
-        iPPI = train_PPI_molecules[key]
-        file_name = os.path.join(train_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+        try:
+            iPPI = train_PPI_molecules[key]
+            file_name = os.path.join(train_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
 
-        graph_protA = 
-        graph_protB = 
-        graph_mol = 
+            csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
+            csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
+            csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
 
-        combine_graph = 
+            # Combine the adjacency matrices
+            combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
 
-        save_combined_graph(graph, file_name) 
+            # Combine the feature matrices
+            combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
+
+            # Create a Spektral Graph object
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+
+            save_graph_to_hdf5(graph, file_name)
+        except Exception as e:
+            skipped += 1
+    
+    print("Skipped {} files.".format(skipped))
+
+
+
+    val_path = "data/iPPI_graphs/val_graphs"
+    if not os.path.exists(val_path):
+        os.makedirs(val_path)
+    skipped = 0
+    for key in tqdm(sorted(list(val_PPI_molecules.keys())), desc="Saving validation data", unit="c_graphs"):
+        iPPI = val_PPI_molecules[key]
+        file_name = os.path.join(val_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+
+        csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
+        csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
+        csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
+
+        # Combine the adjacency matrices
+        combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
+
+        # Combine the feature matrices
+        combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
+
+        # Create a Spektral Graph object
+        graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+
+        save_graph_to_hdf5(graph, file_name) 
+
+    print("Skipped {} files.".format(skipped))
+
+    test_path = "data/iPPI_graphs/test_graphs"
+    if not os.path.exists(test_path):
+        os.makedirs(test_path)
+    skipped = 0
+    for key in tqdm(sorted(list(test_PPI_molecules.keys())), desc="Saving test data", unit="c_graphs"):
+        iPPI = test_PPI_molecules[key]
+        file_name = os.path.join(test_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+
+        csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
+        csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
+        csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
+
+        # Combine the adjacency matrices
+        combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
+
+        # Combine the feature matrices
+        combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
+
+        # Create a Spektral Graph object
+        graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+
+        save_graph_to_hdf5(graph, file_name) 
+    
+    print("Skipped {} files.".format(skipped))
 
 if __name__ == "__main__":
     main()
