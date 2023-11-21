@@ -12,7 +12,7 @@ def main():
     train_dataset = iPPIDataset(mode="train")
     val_dataset = iPPIDataset(mode="val")
 
-    train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=100)
+    train_loader = DisjointLoader(train_dataset, batch_size=4, epochs=100000)
     val_loader = DisjointLoader(val_dataset, batch_size=4)
 
     checkpoint_path = "graph_ml/checkpoint_iPPI_model.h5"
@@ -23,7 +23,7 @@ def main():
         validation_data=val_loader.load(),
         validation_steps=val_loader.steps_per_epoch,
         steps_per_epoch=train_loader.steps_per_epoch,
-        epochs=100,
+        epochs=100000,
         callbacks=[checkpoint] 
     )
 
