@@ -5,7 +5,7 @@ import os
 def download_all():
     try:
         # Define the directory where files will be saved
-        save_directory = 'pubchem_assays'
+        save_directory = 'data/pubchem_assays'
 
         # Ensure the save_directory exists
         if not os.path.exists(save_directory):
@@ -20,9 +20,6 @@ def download_all():
         # Connect to the FTP server
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()  # Anonymous login
-
-        # Change to the target directory for JSON files
-        ftp.cwd('/pubchem/Bioassay/JSON/')
 
         # Get a list of files in the directory
         files = ftp.nlst('*.zip')  # Adjust pattern as needed
