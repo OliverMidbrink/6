@@ -8,6 +8,7 @@ from spektral.data import DisjointLoader, Graph, Dataset
 import numpy as np
 import os
 from tqdm import tqdm
+import random
 
 class PredDataset(Dataset):
     def __init__(self, graphs, **kwargs):
@@ -57,18 +58,21 @@ def main():
     graphs = []
     labels = []
     file_name = "data/iPPI_graphs/train_graphs/"
-    for file in sorted(list(os.listdir(file_name)))[:100]:
+    for file in random.sample(sorted(list(os.listdir(file_name))), 1000):
         graph = load_graph_from_hdf5(os.path.join(file_name, file))
-        label = file.split("_iPPI_")[1][0]
+        label = int(file.split("_iPPI_")[1][0])
         labels.append(label)
-        print(label)
         graphs.append(graph)
 
 
     y = [float(x[0]) for x in predict(graphs)]
+    print(np.array(labels).mean())
+    
+    """
     combined = list(zip(y, labels))
     for x in combined:
         print(x)
+    """
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,12 @@ import h5py
 from spektral.data import Graph
 from scipy.sparse import block_diag, hstack, vstack
 
+def get_af_uniprot_ids(af_folder="data/AlphaFoldData/"):
+    uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
+    sorted_ids = sorted(uniprot_ids)
+    print(len(sorted_ids))
+    return sorted_ids
+
 def save_graph_to_hdf5(graph, file_path):
     csr_adjacency = graph.a.tocsr() if not isinstance(graph.a, csr_matrix) else graph.a
 
@@ -53,8 +59,9 @@ def in_HuRI(uniprot_pair_list):
 
 def get_non_iPPIs(n, DLiP_keys, DLiP_data):
     # Uniprots and smiles from only the DLiP_keys
-    uniprots = get_uniprots(DLiP_keys, DLiP_data)
-    smiles = get_smiles(DLiP_keys, DLiP_data)
+    uniprots = get_uniprots(DLiP_data.keys(), DLiP_data)
+    af_uniprots = get_af_uniprot_ids()
+    smiles = get_smiles(DLiP_data.keys(), DLiP_data)
 
     all_combs = list(combinations_with_replacement(uniprots, 2))
     random.shuffle(all_combs)
@@ -67,14 +74,17 @@ def get_non_iPPIs(n, DLiP_keys, DLiP_data):
         # Get a smiles
         random_smiles = random.choice(list(smiles))
 
+        if uniprot_pair_list[0] not in af_uniprots or uniprot_pair_list[1] not in af_uniprots:
+            continue
+
         if in_HuRI(uniprot_pair_list): # If it is a known interaction
             if not is_in_DLiP(uniprot_pair_list, smiles, DLiP_data): # Assume it is not an iPPI and add
                 non_iPPI = (uniprot_pair_list[0], uniprot_pair_list[1], random_smiles)
                 non_iPPIs.add(non_iPPI)
 
                 if len(non_iPPIs) == n:
-                    break
-        
+                    break      
+  
     return non_iPPIs
 
 def get_DLiP_ids_from_nodes(train_nodes, DLiP_data):
@@ -258,11 +268,16 @@ def main():
         test_PPI_molecules[id_count] = iPPI
         id_count += 2
     
+    print(id_count)
+
+
     id_count = 1
     for non_iPPI in get_non_iPPIs(len(test_DLiP_ids), test_DLiP_ids, DLiP_data):
         iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
         test_PPI_molecules[id_count] = iPPI
         id_count += 2
+    
+    print(id_count)
 
     # Now we have the following dicts
     # train_PPI_molecules
