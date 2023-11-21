@@ -7,6 +7,13 @@ from get_HuRI_graph import get_neighbors_from_uniprots, get_HuRI_table_as_unipro
 import json
 from tqdm import tqdm
 import random
+import os
+
+def get_af_uniprot_ids(af_folder="data/AlphaFoldData/"):
+    uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
+    sorted_ids = sorted(uniprot_ids)
+    print(len(sorted_ids))
+    return sorted_ids
 
 def ask_gpt(input_text, prompt, model, client):
     gpt_response = client.chat.completions.create(
@@ -101,10 +108,19 @@ def evaluate_edges(edge_list):
 
 def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
+    af_uniprots = get_af_uniprot_ids()
 
-    edges_to_evaluate = random.sample(get_neighbors_from_uniprots(get_HuRI_table_as_uniprot_edge_list(), interesting_uniprot_ids, n_step_neighbors=2), 100)
+    two_step_neighbors = get_neighbors_from_uniprots(get_HuRI_table_as_uniprot_edge_list(), interesting_uniprot_ids, n_step_neighbors=2)
+    n_edges_to_evaluate = 100
+    edges_to_evaluate = []
+    while len(edges_to_evaluate) < n_edges_to_evaluate:
+        edge = random.choice(two_step_neighbors)
+        if edge[0] in af_uniprots and edge[1] in af_uniprots:
+            if edge not in edges_to_evaluate and [edge[1], edge[0]] not in edges_to_evaluate:
+                edges_to_evaluate.append(edge)
+        
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
-    tuples = evaluate_edges(edges_to_evaluate)        
+    tuples = evaluate_edges(edges_to_evaluate)       
 
     with open("MULTISELS/OSK_upreg_2_neighbors_chatGPT3_turpo_1106.json", "w") as file:
         json_data = {"tuples": tuples}
