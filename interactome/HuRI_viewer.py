@@ -5,6 +5,7 @@ from scipy.sparse import csr_matrix
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+import h5py
 
 def plot_graph(G):
     # The graph to visualize
@@ -43,12 +44,22 @@ def _format_axes(ax):
     ax.set_ylabel("y")
     ax.set_zlabel("z")
 
+def load_csr_matrix(filename):
+    # Open the file in read mode
+    with h5py.File(filename, 'r') as file:
+        # Load the data, indices, and indptr to create a csr_matrix
+        data = file['data'][:]
+        indices = file['indices'][:]
+        indptr = file['indptr'][:]
+        shape = file.attrs['shape']
+        
+        # Create the csr_matrix with the loaded data
+        csr = csr_matrix((data, indices, indptr), shape=shape)
+    return csr
 
 
 def main():
-    csr_graph = load_csr_graph(edge_list)
-
-    print(csr_graph)
+    csr_graph = load_csr_matrix('interactome/HuRI_to_Alphafold_PPI_csr_matrix.h5')
     
     plot_graph(csr_graph)
 
