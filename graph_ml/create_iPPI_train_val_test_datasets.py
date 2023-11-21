@@ -292,7 +292,7 @@ def main():
             graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
 
             save_graph_to_hdf5(graph, file_name)
-        except Exception as e:
+        except:
             skipped += 1
     
     print("Skipped {} files.".format(skipped))
@@ -304,23 +304,26 @@ def main():
         os.makedirs(val_path)
     skipped = 0
     for key in tqdm(sorted(list(val_PPI_molecules.keys())), desc="Saving validation data", unit="c_graphs"):
-        iPPI = val_PPI_molecules[key]
-        file_name = os.path.join(val_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+        try:
+            iPPI = val_PPI_molecules[key]
+            file_name = os.path.join(val_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
 
-        csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
-        csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
-        csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
+            csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
+            csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
+            csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
 
-        # Combine the adjacency matrices
-        combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
+            # Combine the adjacency matrices
+            combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
 
-        # Combine the feature matrices
-        combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
+            # Combine the feature matrices
+            combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
-        # Create a Spektral Graph object
-        graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+            # Create a Spektral Graph object
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
 
-        save_graph_to_hdf5(graph, file_name) 
+            save_graph_to_hdf5(graph, file_name)
+        except:
+            skipped += 1
 
     print("Skipped {} files.".format(skipped))
 
@@ -329,23 +332,26 @@ def main():
         os.makedirs(test_path)
     skipped = 0
     for key in tqdm(sorted(list(test_PPI_molecules.keys())), desc="Saving test data", unit="c_graphs"):
-        iPPI = test_PPI_molecules[key]
-        file_name = os.path.join(test_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+        try:
+            iPPI = test_PPI_molecules[key]
+            file_name = os.path.join(test_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
 
-        csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
-        csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
-        csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
+            csr_protA, feat_protA = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][0]))
+            csr_protB, feat_protB = load_from_hdf5('data/protein_atom_graphs/AF-{}-F1-model_v4_graph.hdf5'.format(iPPI['proteins'][1]))
+            csr_mol, feat_mol = load_from_hdf5('data/mol_graphs/{}_graph.hdf5'.format(iPPI['molecule']))
 
-        # Combine the adjacency matrices
-        combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
+            # Combine the adjacency matrices
+            combined_adjacency = block_diag((csr_protA, csr_protB, csr_mol))
 
-        # Combine the feature matrices
-        combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
+            # Combine the feature matrices
+            combined_features = np.vstack((feat_protA, feat_protB, feat_mol))
 
-        # Create a Spektral Graph object
-        graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
+            # Create a Spektral Graph object
+            graph = Graph(x=combined_features, a=combined_adjacency, y=np.array(iPPI["iPPI"], dtype=np.float32))
 
-        save_graph_to_hdf5(graph, file_name) 
+            save_graph_to_hdf5(graph, file_name)
+        except:
+            skipped += 1
     
     print("Skipped {} files.".format(skipped))
 
