@@ -189,6 +189,7 @@ def get_uniprots(keys, DLiP_data):
     return proteins
 
 def main():
+    af_uniprots = get_af_uniprot_ids()
     output_dir_path = "data/mol_graphs"
     molecule_smiles = "DLiP_rule_of_5_compound_data.json"
     DLiP_data = {}
@@ -232,14 +233,17 @@ def main():
     # Fill in with equal amount of assumed non iPPI prot pairs + mol
     train_PPI_molecules = {}
     id_count = 0
+    added = 0
     for DLiP_id in train_DLiP_ids:
         # Positive iPPI, molecule inhibits interaction
-        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
-        train_PPI_molecules[id_count] = iPPI
-        id_count += 2
+        if DLiP_data[DLiP_id]["proteins"][0] in af_uniprots and DLiP_data[DLiP_id]["proteins"][1] in af_uniprots:
+            iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
+            train_PPI_molecules[id_count] = iPPI
+            id_count += 2
+            added += 1
     
     id_count = 1
-    for non_iPPI in get_non_iPPIs(len(train_DLiP_ids), train_DLiP_ids, DLiP_data):
+    for non_iPPI in get_non_iPPIs(added, train_DLiP_ids, DLiP_data):
         iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
         train_PPI_molecules[id_count] = iPPI
         id_count += 2
@@ -247,14 +251,17 @@ def main():
     
     val_PPI_molecules = {}
     id_count = 0
+    added = 0
     for DLiP_id in val_DLiP_ids:
         # Positive iPPI, molecule inhibits interaction
-        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
-        val_PPI_molecules[id_count] = iPPI
-        id_count += 2
+        if DLiP_data[DLiP_id]["proteins"][0] in af_uniprots and DLiP_data[DLiP_id]["proteins"][1] in af_uniprots:
+            iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
+            val_PPI_molecules[id_count] = iPPI
+            id_count += 2
+            added += 1
     
     id_count = 1
-    for non_iPPI in get_non_iPPIs(len(val_DLiP_ids), val_DLiP_ids, DLiP_data):
+    for non_iPPI in get_non_iPPIs(added, val_DLiP_ids, DLiP_data):
         iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
         val_PPI_molecules[id_count] = iPPI
         id_count += 2
@@ -262,22 +269,21 @@ def main():
     
     test_PPI_molecules = {}
     id_count = 0
+    added = 0
     for DLiP_id in test_DLiP_ids:
         # Positive iPPI, molecule inhibits interaction
-        iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
-        test_PPI_molecules[id_count] = iPPI
-        id_count += 2
+        if DLiP_data[DLiP_id]["proteins"][0] in af_uniprots and DLiP_data[DLiP_id]["proteins"][1] in af_uniprots:
+            iPPI = {"proteins": DLiP_data[DLiP_id]["proteins"], "molecule": DLiP_data[DLiP_id]["SMILES"][0], "iPPI": 1} # 0 for the canonical RdKit smiles
+            test_PPI_molecules[id_count] = iPPI
+            id_count += 2
+            added += 1
     
-    print(id_count)
-
-
     id_count = 1
-    for non_iPPI in get_non_iPPIs(len(test_DLiP_ids), test_DLiP_ids, DLiP_data):
+    for non_iPPI in get_non_iPPIs(added, test_DLiP_ids, DLiP_data):
         iPPI = {"proteins": [non_iPPI[0], non_iPPI[1]], "molecule": non_iPPI[2], "iPPI": 0} # 0 for the canonical RdKit smiles
         test_PPI_molecules[id_count] = iPPI
         id_count += 2
     
-    print(id_count)
 
     # Now we have the following dicts
     # train_PPI_molecules
