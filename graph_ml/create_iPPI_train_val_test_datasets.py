@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.sparse.csgraph import connected_components
 from itertools import combinations_with_replacement
+from tqdm import tqdm
 
 def is_in_DLiP(uniprot_pair_list, smiles, DLiP_data):
     for DLiP_value in DLiP_data.values():
@@ -236,7 +237,19 @@ def main():
     # val_PPI_molecules
     # test_PPI_molecules
 
-    
+    train_path = "data/iPPI_graphs/train_graphs"
+    os.makedirs(train_path)
+    for key in tqdm(sorted(list(train_PPI_molecules.keys())), desc="Saving training data", unit="c_graphs"):
+        iPPI = train_PPI_molecules[key]
+        file_name = os.path.join(train_path, '{}_protA_{}_protB_{}_smiles_{}_is_iPPI_{}.hdf5'.format(key, iPPI['proteins'][0], iPPI['proteins'][1], iPPI['molecule'], iPPI["iPPI"]))
+
+        graph_protA = 
+        graph_protB = 
+        graph_mol = 
+
+        combine_graph = 
+
+        save_combined_graph(graph, file_name) 
 
 if __name__ == "__main__":
     main()
