@@ -11,6 +11,38 @@ from tqdm import tqdm
 import h5py
 from spektral.data import Graph
 from scipy.sparse import block_diag, hstack, vstack
+import pandas as pd
+
+def uniprot_list_from_ensg(ensg, df_idmappings):
+    uniprots = list(df_idmappings.loc[df_idmappings["From"] == ensg]["Entry"])
+    return uniprots
+
+def get_HuRI_table_as_uniprot_edge_list():
+    if os.path.exists("interactome/HuRI_edge_list.json"):
+        print("Loading saved edgelist.")
+        with open("interactome/HuRI_edge_list.json", "r") as file:
+            return json.load(file)["HuRI_edge_list"]
+    else:
+        print("Generating edgelist...")
+        edge_list = []
+        df = pd.read_table("interactome/HuRI.tsv")
+        df_idmappings = pd.read_table("interactome/idmapping_2023_11_18.tsv")
+
+        for index, row in tqdm(df.iterrows(), total=df.shape[0], desc="Reading mappings"):
+            interact_A = row['A']
+            interact_B = row['B']
+
+            uniprots_A = uniprot_list_from_ensg(interact_A, df_idmappings)
+            uniprots_B = uniprot_list_from_ensg(interact_B, df_idmappings)
+
+            for uniprot_A in uniprots_A:
+                for uniprot_B in uniprots_B:
+                    edge_list.append([uniprot_A, uniprot_B])
+
+        with open("interactome/HuRI_edge_list.json", "w") as file:
+            json_data = {"HuRI_edge_list": edge_list}
+            json.dump(json_data, file)
+        return get_HuRI_table_as_uniprot_edge_list()
 
 def get_af_uniprot_ids(af_folder="data/AlphaFoldData/"):
     uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
@@ -53,9 +85,12 @@ def is_in_DLiP(uniprot_pair_list, smiles, DLiP_data):
             return True
     return False
 
-def in_HuRI(uniprot_pair_list):
-    # TODO COMPLETE THIS
-    return True
+def in_HuRI(uniprot_pair_list, edge_list):
+    if uniprot_pair_list in edge_list or [uniprot_pair_list[1], uniprot_pair_list[0]] in edge_list:
+        return True
+    else:
+        return False
+        print("not in HuRI")
 
 def get_non_iPPIs(n, DLiP_keys, DLiP_data):
     # Uniprots and smiles from only the DLiP_keys
@@ -65,6 +100,8 @@ def get_non_iPPIs(n, DLiP_keys, DLiP_data):
 
     all_combs = list(combinations_with_replacement(uniprots, 2))
     random.shuffle(all_combs)
+
+    edge_list = get_HuRI_table_as_uniprot_edge_list()
 
     non_iPPIs = set()
 
@@ -77,7 +114,7 @@ def get_non_iPPIs(n, DLiP_keys, DLiP_data):
         if uniprot_pair_list[0] not in af_uniprots or uniprot_pair_list[1] not in af_uniprots:
             continue
 
-        if in_HuRI(uniprot_pair_list): # If it is a known interaction
+        if in_HuRI(uniprot_pair_list, edge_list): # If it is a known interaction
             if not is_in_DLiP(uniprot_pair_list, smiles, DLiP_data): # Assume it is not an iPPI and add
                 non_iPPI = (uniprot_pair_list[0], uniprot_pair_list[1], random_smiles)
                 non_iPPIs.add(non_iPPI)
