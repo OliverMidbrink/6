@@ -108,15 +108,27 @@ def evaluate_edges(edge_list, model):
     print("Total cost for edge list was {} dollars".format(total_cost))
     return list(tuples)
 
+def get_eval_edges(tree_n: list, interesting_uniprot_ids: list):
+    interactome_edge_list = get_HuRI_table_as_uniprot_edge_list()
+
+    step = 0
+    for n in tree_n:
+        step += 1
+        step_edges = get_neighbors_from_uniprots(interactome_edge_list, interesting_uniprot_ids, n_step_neighbors=step)
+        random.shuffle(step_edges)
+        
+        
+
+
 def main():
-    """
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     af_uniprots = get_af_uniprot_ids()
 
-    two_step_neighbors = get_neighbors_from_uniprots(get_HuRI_table_as_uniprot_edge_list(), interesting_uniprot_ids, n_step_neighbors=2)
-    n_edges_to_evaluate = 100
+    two_step_neighbors = 
+    n_eval_two_step = 3
+
     edges_to_evaluate = []
-    while len(edges_to_evaluate) < n_edges_to_evaluate:
+    while len(edges_to_evaluate) < n_eval_two_step:
         edge = random.choice(two_step_neighbors)
         if edge[0] in af_uniprots and edge[1] in af_uniprots:
             if edge not in edges_to_evaluate and [edge[1], edge[0]] not in edges_to_evaluate:
@@ -124,6 +136,12 @@ def main():
         
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
     
+    tuples = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3) # Use GPT4 and 3 repetition average
+
+    with open("MULTISELS/iPPI_eval_GPT4_NREPAVG_3.json", "w") as file:
+        json.dump({"tuples": tuples}, file)
+
+    """
     os.makedirs("MULTISELS/BENCHMARKING")
     ## Create comparison
     tuples_1 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
@@ -154,7 +172,7 @@ def main():
     with open("MULTISELS/BENCHMARKING/com3_gpt4.json", "w") as file:
         json_data = {"tuples": tuples_3_gpt_4}
         json.dump(json_data, file)
-    """
+    
 
     with open("MULTISELS/BENCHMARKING/com1.json", "r") as file:
         tuples_1 = json.load(file)
@@ -170,9 +188,8 @@ def main():
         tuples_2_gpt_4 = json.load(file)
     with open("MULTISELS/BENCHMARKING/com3_gpt4.json", "r") as file:
         tuples_3_gpt_4 = json.load(file)
-    
+    """
 
-    print()
 
 if __name__ == "__main__":
     main()
