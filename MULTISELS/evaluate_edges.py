@@ -58,13 +58,14 @@ def get_cost(input_chars, output_chars, model):
     else:
         print("Please add model pricing in the get cost function for pricing.")
 
-def evaluate_edge_helpfullness(edge, instruction, client, model):
+def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
     iPPI_helpfullness = None
 
     total_cost = 0
+    reps = 0
 
     failed_attemps = 0
-    while iPPI_helpfullness is None:
+    while reps < n_rep_avg:
         try:
             gpt_input = str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein (could be interacting with the same protein) is\n\n\n" + str(get_uniprot_data(edge[1])) + "Only answer with a number -100 to 100."
             gpt_prompt = "From -100 to 100. 100 = should inhibit, -100 = do not inhibit. 0 for no knowledge. Just respond with the number. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated using your comprehensive biological knowledge) (if you cant decide just enter -10 to 10): {}".format(instruction)
@@ -75,7 +76,8 @@ def evaluate_edge_helpfullness(edge, instruction, client, model):
             total_cost += get_cost(total_input_len, output_len, model)
             print(gpt_evaluation)
         
-            iPPI_helpfullness = float(gpt_evaluation) / 100
+            iPPI_helpfullness = float(gpt_evaluation) / 100 / n_rep_avg
+            reps += 1
         except:
             failed_attemps += 1
             print("Attemps {}".format(failed_attemps))
@@ -86,7 +88,7 @@ def evaluate_edge_helpfullness(edge, instruction, client, model):
     print("Cost was {} dollars".format(total_cost))
     return iPPI_helpfullness, total_cost
 
-def evaluate_edges(edge_list, model):
+def evaluate_edges(edge_list, model, n_rep_avg, intresting_uniprot_ids, search_tree, file_name=None):
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
         api_key="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",
@@ -100,40 +102,67 @@ def evaluate_edges(edge_list, model):
     tuples = set()
 
     for edge in tqdm(edge_list, desc="Evaluating protein interactions", unit="iPPIs"):
-        iPPI_helpfullness, cost = evaluate_edge_helpfullness(edge, instruction, client, model)
+        iPPI_helpfullness, cost = evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model)
         total_cost += cost
         tuples.add((edge[0], edge[1], iPPI_helpfullness))
         print("Total cost is {} dollars".format(total_cost))
 
     print("Total cost for edge list was {} dollars".format(total_cost))
-    return list(tuples)
+
+
+
+    json_data = {"iPPI_tuples": list(tuples), "search_tree": search_tree, "interesting_uniprot_ids": intresting_uniprot_ids, "cost": total_cost}
+
+    if file_name is not None and not os.path.exists(file_name):
+        with open(file_name, "w") as file:
+            json.dump(json_data, file)
+
+    return json_data
+
+def in_edge_list(edge, edge_list):
+    if edge in edge_list or [edge[1], edge[0]] in edge_list:
+        return True
+    return False
+
+def both_in_uniprot_list(edge, uniprot_list): # AlphaFold
+    if edge[0] in uniprot_list and edge[1] in uniprot_list:
+        return True
+    return False
+
+def get_only_unique(edge_list):
+    unique_pairs = list(set(tuple(sorted(pair)) for pair in edge_list))
+    unique_list = [list(pair) for pair in unique_pairs]
+    return unique_list
 
 def get_eval_edges(tree_n: list, interesting_uniprot_ids: list):
     interactome_edge_list = get_HuRI_table_as_uniprot_edge_list()
+    af_uniprots = get_af_uniprot_ids()
+    edges_to_evaluate = []
 
     step = 0
     for n in tree_n:
         step += 1
         step_edges = get_neighbors_from_uniprots(interactome_edge_list, interesting_uniprot_ids, n_step_neighbors=step)
+        step_edges = get_only_unique(step_edges) # Might already be unique but double check
+        step_edges = [edge for edge in step_edges if both_in_uniprot_list(edge, af_uniprots)] # Filter only AF edges (because of structure data limitation)
         random.shuffle(step_edges)
-        
-        
 
+        if n is not None and n < len(step_edges): # If n, sample, else take all edges
+            step_edges = random.sample(step_edges, n)
+        
+        edges_to_evaluate += step_edges
+
+
+    edges_to_evaluate = get_only_unique(edges_to_evaluate) # If graph is cyclic, filter out the duplicates
+    return edges_to_evaluate
 
 def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
-    af_uniprots = get_af_uniprot_ids()
+    search_tree = [10, 5, 3, 1]
+    edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
+    json = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_output.json")
 
-    two_step_neighbors = 
-    n_eval_two_step = 3
-
-    edges_to_evaluate = []
-    while len(edges_to_evaluate) < n_eval_two_step:
-        edge = random.choice(two_step_neighbors)
-        if edge[0] in af_uniprots and edge[1] in af_uniprots:
-            if edge not in edges_to_evaluate and [edge[1], edge[0]] not in edges_to_evaluate:
-                edges_to_evaluate.append(edge)
-        
+    sys.exit(0)
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
     
     tuples = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3) # Use GPT4 and 3 repetition average
