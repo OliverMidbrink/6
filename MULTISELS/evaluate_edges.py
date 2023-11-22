@@ -109,6 +109,7 @@ def evaluate_edges(edge_list, model):
     return list(tuples)
 
 def main():
+    """
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     af_uniprots = get_af_uniprot_ids()
 
@@ -122,7 +123,8 @@ def main():
                 edges_to_evaluate.append(edge)
         
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
-
+    
+    os.makedirs("MULTISELS/BENCHMARKING")
     ## Create comparison
     tuples_1 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
     tuples_2 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
@@ -132,26 +134,45 @@ def main():
     tuples_2_gpt_4 = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview")
     tuples_3_gpt_4 = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview")     
 
-    with open("MULTISELS/com1.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com1.json", "w") as file:
         json_data = {"tuples": tuples_1}
         json.dump(json_data, file)
-    with open("MULTISELS/com2.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com2.json", "w") as file:
         json_data = {"tuples": tuples_2}
         json.dump(json_data, file)
-    with open("MULTISELS/com3.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com3.json", "w") as file:
         json_data = {"tuples": tuples_3}
         json.dump(json_data, file)
 
 
-    with open("MULTISELS/com1_gpt4.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com1_gpt4.json", "w") as file:
         json_data = {"tuples": tuples_1_gpt_4}
         json.dump(json_data, file)
-    with open("MULTISELS/com2_gpt4.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com2_gpt4.json", "w") as file:
         json_data = {"tuples": tuples_2_gpt_4}
         json.dump(json_data, file)
-    with open("MULTISELS/com3_gpt4.json", "w") as file:
+    with open("MULTISELS/BENCHMARKING/com3_gpt4.json", "w") as file:
         json_data = {"tuples": tuples_3_gpt_4}
         json.dump(json_data, file)
+    """
+
+    with open("MULTISELS/BENCHMARKING/com1.json", "r") as file:
+        tuples_1 = json.load(file)
+    with open("MULTISELS/BENCHMARKING/com2.json", "r") as file:
+        tuples_2 = json.load(file)
+    with open("MULTISELS/BENCHMARKING/com3.json", "r") as file:
+        tuples_3 = json.load(file)
+
+
+    with open("MULTISELS/BENCHMARKING/com1_gpt4.json", "r") as file:
+        tuples_1_gpt_4 = json.load(file)
+    with open("MULTISELS/BENCHMARKING/com2_gpt4.json", "r") as file:
+        tuples_2_gpt_4 = json.load(file)
+    with open("MULTISELS/BENCHMARKING/com3_gpt4.json", "r") as file:
+        tuples_3_gpt_4 = json.load(file)
+    
+
+    print()
 
 if __name__ == "__main__":
     main()
