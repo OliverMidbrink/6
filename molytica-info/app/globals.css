@@ -25,3 +25,21 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.box {
+  flex: 1; /* Each box will take an equal amount of space */
+  padding: 30px;
+  padding-top: 50px;
+}
+
+.box2 {
+  flex: 1; /* Each box will take an equal amount of space */
+  padding: 30px;
+  padding-top: -50px;
+}
