@@ -109,8 +109,6 @@ def evaluate_edges(edge_list, model, n_rep_avg, intresting_uniprot_ids, search_t
 
     print("Total cost for edge list was {} dollars".format(total_cost))
 
-
-
     json_data = {"iPPI_tuples": list(tuples), "search_tree": search_tree, "interesting_uniprot_ids": intresting_uniprot_ids, "cost": total_cost, "model": model, "n_rep_avg": n_rep_avg, "instruction": instruction}
 
     if file_name is not None: # Save, will overwrite.
