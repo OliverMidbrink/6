@@ -22,7 +22,7 @@ export default function Multisels() {
             </span>
           </h2>
           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Company page.
+            Company page
           </p>
         </Link>
 
