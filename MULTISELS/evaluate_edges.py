@@ -52,11 +52,13 @@ def get_cost(input_chars, output_chars, model):
     input_tokens = input_chars / 4
     output_tokens = output_chars / 4
     if model == "gpt-3.5-turbo-1106":
-        return 0.001 * input_tokens / 1000 + 0.002 * output_tokens / 1000
+        return 0.001 / 1000 * input_tokens + 0.002 / 1000 * output_tokens
+    if model == "gpt-4-1106-preview":
+        return 0.01 / 1000 * input_tokens + 0.03 / 1000 * output_tokens
     else:
         print("Please add model pricing in the get cost function for pricing.")
 
-def evaluate_edge_helpfullness(edge, instruction, client):
+def evaluate_edge_helpfullness(edge, instruction, client, model):
     iPPI_helpfullness = None
 
     total_cost = 0
@@ -67,10 +69,10 @@ def evaluate_edge_helpfullness(edge, instruction, client):
             gpt_input = str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein (could be interacting with the same protein) is\n\n\n" + str(get_uniprot_data(edge[1])) + "Only answer with a number -100 to 100."
             gpt_prompt = "From -100 to 100. 100 = should inhibit, -100 = do not inhibit. 0 for no knowledge. Just respond with the number. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated using your comprehensive biological knowledge) (if you cant decide just enter -10 to 10): {}".format(instruction)
             total_input_len = len(gpt_input + gpt_prompt)
-            gpt_evaluation = ask_gpt(gpt_input, gpt_prompt, "gpt-3.5-turbo-1106", client)
+            gpt_evaluation = ask_gpt(gpt_input, gpt_prompt, model, client)
             output_len = len(gpt_evaluation)
 
-            total_cost += get_cost(total_input_len, output_len, model="gpt-3.5-turbo-1106")
+            total_cost += get_cost(total_input_len, output_len, model)
             print(gpt_evaluation)
         
             iPPI_helpfullness = float(gpt_evaluation) / 100
@@ -84,7 +86,7 @@ def evaluate_edge_helpfullness(edge, instruction, client):
     print("Cost was {} dollars".format(total_cost))
     return iPPI_helpfullness, total_cost
 
-def evaluate_edges(edge_list):
+def evaluate_edges(edge_list, model):
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
         api_key="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",
@@ -98,7 +100,7 @@ def evaluate_edges(edge_list):
     tuples = set()
 
     for edge in tqdm(edge_list, desc="Evaluating protein interactions", unit="iPPIs"):
-        iPPI_helpfullness, cost = evaluate_edge_helpfullness(edge, instruction, client)
+        iPPI_helpfullness, cost = evaluate_edge_helpfullness(edge, instruction, client, model)
         total_cost += cost
         tuples.add((edge[0], edge[1], iPPI_helpfullness))
         print("Total cost is {} dollars".format(total_cost))
@@ -120,10 +122,35 @@ def main():
                 edges_to_evaluate.append(edge)
         
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
-    tuples = evaluate_edges(edges_to_evaluate)       
 
-    with open("MULTISELS/OSK_upreg_2_neighbors_chatGPT3_turpo_1106.json", "w") as file:
-        json_data = {"tuples": tuples}
+    ## Create comparison
+    tuples_1 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
+    tuples_2 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
+    tuples_3 = evaluate_edges(edges_to_evaluate, model="gpt-3.5-turbo-1106")
+
+    tuples_1_gpt_4 = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview")
+    tuples_2_gpt_4 = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview")
+    tuples_3_gpt_4 = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview")     
+
+    with open("MULTISELS/com1.json", "w") as file:
+        json_data = {"tuples": tuples_1}
+        json.dump(json_data, file)
+    with open("MULTISELS/com2.json", "w") as file:
+        json_data = {"tuples": tuples_2}
+        json.dump(json_data, file)
+    with open("MULTISELS/com3.json", "w") as file:
+        json_data = {"tuples": tuples_3}
+        json.dump(json_data, file)
+
+
+    with open("MULTISELS/com1_gpt4.json", "w") as file:
+        json_data = {"tuples": tuples_1_gpt_4}
+        json.dump(json_data, file)
+    with open("MULTISELS/com2_gpt4.json", "w") as file:
+        json_data = {"tuples": tuples_2_gpt_4}
+        json.dump(json_data, file)
+    with open("MULTISELS/com3_gpt4.json", "w") as file:
+        json_data = {"tuples": tuples_3_gpt_4}
         json.dump(json_data, file)
 
 if __name__ == "__main__":
