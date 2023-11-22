@@ -32,14 +32,19 @@ body {
   flex-wrap: wrap;
 }
 
-.box {
-  flex: 1; /* Each box will take an equal amount of space */
-  padding: 30px;
-  padding-top: 50px;
+@media (max-width: 768px) {
+  .box {
+    flex: 1; /* Each box will take an equal amount of space */
+    padding: 30px;
+    padding-top:0px;
+  }
 }
 
-.box2 {
-  flex: 1; /* Each box will take an equal amount of space */
-  padding: 30px;
-  padding-top: -50px;
+@media (min-width: 769px) {
+  .box {
+    flex: 1; /* Each box will take an equal amount of space */
+    padding: 30px;
+    padding-top: 50px;
+  }
 }
+
