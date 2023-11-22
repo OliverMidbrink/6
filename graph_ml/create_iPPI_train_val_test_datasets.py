@@ -87,10 +87,11 @@ def is_in_DLiP(uniprot_pair_list, smiles, DLiP_data):
 
 def in_HuRI(uniprot_pair_list, edge_list):
     if uniprot_pair_list in edge_list or [uniprot_pair_list[1], uniprot_pair_list[0]] in edge_list:
+        print("in HuRI")
         return True
     else:
-        return False
         print("not in HuRI")
+        return False
 
 def get_non_iPPIs(n, DLiP_keys, DLiP_data):
     # Uniprots and smiles from only the DLiP_keys
@@ -105,7 +106,7 @@ def get_non_iPPIs(n, DLiP_keys, DLiP_data):
 
     non_iPPIs = set()
 
-    for uniprot_pair in all_combs:
+    for uniprot_pair in edge_list:
         uniprot_pair_list = list(uniprot_pair)
         # Get a random uniprot_pair (including homo pairs)
         # Get a smiles
@@ -113,14 +114,15 @@ def get_non_iPPIs(n, DLiP_keys, DLiP_data):
 
         if uniprot_pair_list[0] not in af_uniprots or uniprot_pair_list[1] not in af_uniprots:
             continue
+        
+        if not is_in_DLiP(uniprot_pair_list, smiles, DLiP_data): # Assume it is not an iPPI and add
+            non_iPPI = (uniprot_pair_list[0], uniprot_pair_list[1], random_smiles)
+            non_iPPIs.add(non_iPPI)
+            if len(non_iPPIs) % 100 == 0:
+                print("Adding non iPPI {}/{}".format(len(non_iPPIs), n))
 
-        if in_HuRI(uniprot_pair_list, edge_list): # If it is a known interaction
-            if not is_in_DLiP(uniprot_pair_list, smiles, DLiP_data): # Assume it is not an iPPI and add
-                non_iPPI = (uniprot_pair_list[0], uniprot_pair_list[1], random_smiles)
-                non_iPPIs.add(non_iPPI)
-
-                if len(non_iPPIs) == n:
-                    break      
+            if len(non_iPPIs) == n:
+                break      
   
     return non_iPPIs
 
