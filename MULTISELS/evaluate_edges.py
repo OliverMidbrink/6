@@ -8,6 +8,7 @@ import json
 from tqdm import tqdm
 import random
 import os
+import time
 
 def get_af_uniprot_ids(af_folder="data/AlphaFoldData/"):
     uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
@@ -22,7 +23,7 @@ def ask_gpt(input_text, prompt, model, client):
             {"role": "user", "content": input_text}
         ],
         model=model,
-        temperature=0.0,
+        temperature=0.3,
         timeout=10,
     )
     return gpt_response.choices[0].message.content
@@ -59,7 +60,7 @@ def get_cost(input_chars, output_chars, model):
         print("Please add model pricing in the get cost function for pricing.")
 
 def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
-    iPPI_helpfullness = None
+    iPPI_helpfullness = 0
 
     total_cost = 0
     reps = 0
@@ -67,6 +68,7 @@ def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
     failed_attemps = 0
     while reps < n_rep_avg:
         try:
+            time.sleep(0.5)
             gpt_input = str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein (could be interacting with the same protein) is\n\n\n" + str(get_uniprot_data(edge[1])) + "Only answer with a number -100 to 100."
             gpt_prompt = "From -100 to 100. 100 = should inhibit, -100 = do not inhibit. 0 for no knowledge. Just respond with the number. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated using your comprehensive biological knowledge) (if you cant decide just enter -10 to 10): {}".format(instruction)
             total_input_len = len(gpt_input + gpt_prompt)
@@ -76,10 +78,11 @@ def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
             total_cost += get_cost(total_input_len, output_len, model)
             print(gpt_evaluation)
         
-            iPPI_helpfullness = float(gpt_evaluation) / 100 / n_rep_avg
+            iPPI_helpfullness = float(gpt_evaluation) / 100.0 / float(n_rep_avg)
             reps += 1
-        except:
+        except Exception as e:
             failed_attemps += 1
+            print(e)
             print("Attemps {}".format(failed_attemps))
             if failed_attemps > 7:
                 #return 0, total_cost
@@ -88,7 +91,7 @@ def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
     print("Cost was {} dollars".format(total_cost))
     return iPPI_helpfullness, total_cost
 
-def evaluate_edges(edge_list, model, n_rep_avg, intresting_uniprot_ids, search_tree, file_name=None):
+def evaluate_edges(edge_list, model, n_rep_avg, interesting_uniprot_ids, search_tree, file_name=None):
     client = OpenAI(
         # defaults to os.environ.get("OPENAI_API_KEY")
         api_key="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",
@@ -109,7 +112,7 @@ def evaluate_edges(edge_list, model, n_rep_avg, intresting_uniprot_ids, search_t
 
     print("Total cost for edge list was {} dollars".format(total_cost))
 
-    json_data = {"iPPI_tuples": list(tuples), "search_tree": search_tree, "interesting_uniprot_ids": intresting_uniprot_ids, "cost": total_cost, "model": model, "n_rep_avg": n_rep_avg, "instruction": instruction}
+    json_data = {"iPPI_tuples": list(tuples), "search_tree": search_tree, "interesting_uniprot_ids": interesting_uniprot_ids, "cost": total_cost, "model": model, "n_rep_avg": n_rep_avg, "instruction": instruction}
 
     if file_name is not None: # Save, will overwrite.
         with open(file_name, "w") as file:
@@ -158,7 +161,7 @@ def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     search_tree = [10, 5, 3, 1]
     edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
-    json = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_output.json")
+    json = evaluate_edges(edges_to_evaluate, model="gpt-4", n_rep_avg=3, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_gpt-4_output.json")
 
     sys.exit(0)
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
