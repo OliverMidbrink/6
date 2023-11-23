@@ -162,7 +162,7 @@ def get_eval_edges(tree_n: list, interesting_uniprot_ids: list):
 
 def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
-    search_tree = [10, 5, 3, 1]
+    search_tree = [3, 2, 1]
     model = "gpt-4-1106-preview"
     n_rep_avg = 8
 
