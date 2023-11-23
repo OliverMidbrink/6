@@ -13,7 +13,7 @@ import time
 def get_af_uniprot_ids(af_folder="data/AlphaFoldData/"):
     uniprot_ids = {x.split("-")[1] for x in os.listdir(af_folder) if "AF-" in x}
     sorted_ids = sorted(uniprot_ids)
-    print(len(sorted_ids))
+    print("Found {} unique Uniprot IDs in AlphaFoldData directory.".format(len(sorted_ids)))
     return sorted_ids
 
 def ask_gpt(input_text, prompt, model, client):
@@ -167,7 +167,13 @@ def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     search_tree = [10, 5, 3, 1]
     edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
+    user_approval = True if input("Cost Will be projected to {} for this analysis. Proceed? y/n + Enter:") == "y" else False
+    if not user_approval:
+        print("Okay. Then aborting. ")
+        sys.exit(0)
+    print("Proceeding with analysis.")
     json = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_gpt-4_output.json")
+
 
     sys.exit(0)
     print("{} edges to evaluate".format(len(edges_to_evaluate)))
