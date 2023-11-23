@@ -23,7 +23,7 @@ def ask_gpt(input_text, prompt, model, client):
             {"role": "user", "content": input_text}
         ],
         model=model,
-        temperature=0.3,
+        temperature=0.7,
         timeout=10,
     )
     return gpt_response.choices[0].message.content
@@ -166,13 +166,16 @@ def get_eval_edges(tree_n: list, interesting_uniprot_ids: list):
 def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     search_tree = [10, 5, 3, 1]
+    model = "gpt-4-1106-preview"
+    n_rep_avg = 6
+
     edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
-    user_approval = True if input("Cost Will be projected to {} for this analysis. Proceed? y/n + Enter:") == "y" else False
+    user_approval = True if input("Cost Will be projected to {} USD for this analysis. Proceed? y/n + Enter:".format(len(edges_to_evaluate) * n_rep_avg * get_cost_for_one_eval(model))) == "y" else False
     if not user_approval:
         print("Okay. Then aborting. ")
         sys.exit(0)
     print("Proceeding with analysis.")
-    json = evaluate_edges(edges_to_evaluate, model="gpt-4-1106-preview", n_rep_avg=3, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_gpt-4_output.json")
+    json = evaluate_edges(edges_to_evaluate, model=model, n_rep_avg=n_rep_avg, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_gpt-4_output.json")
 
 
     sys.exit(0)
