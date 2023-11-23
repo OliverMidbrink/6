@@ -23,7 +23,7 @@ def ask_gpt(input_text, prompt, model, client):
             {"role": "user", "content": input_text}
         ],
         model=model,
-        temperature=0.7,
+        temperature=0.8,
         timeout=10,
     )
     return gpt_response.choices[0].message.content
@@ -74,15 +74,12 @@ def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
     failed_attemps = 0
     while reps < n_rep_avg:
         try:
-            gpt_input = str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein (could be interacting with the same protein) is\n\n\n" + str(get_uniprot_data(edge[1])) + "Only answer with a number -100 to 100."
-            gpt_prompt = "From -100 to 100. 100 = should inhibit, -100 = do not inhibit. 0 for no knowledge. Just respond with the number. How helpful would inibiting the interaction between these uniprots in achiving this goal (make an educated using your comprehensive biological knowledge) (if you cant decide just enter -10 to 10): {}".format(instruction)
-            total_input_len = len(gpt_input + gpt_prompt)
+            gpt_input = "The first protein is\n\n\n" + str(get_uniprot_data(edge[0])) + "\n\n\nAND the second protein, which could the another protein of the same id, is:\n\n\n" + str(get_uniprot_data(edge[1])) + "\n\n\nMake your judgement and only respond with a number from -100 to 100 based on your instructions."
+            gpt_prompt = "From -100 to 100. 100 = should inhibit because helps goal a lot and has no side effects, -100 = do not inhibit because does not help goal and has a lot of side effects. How helpful would inibiting the interaction between these proteins given by uniptors plus other descriptors be for achiving the following goal. Make an educated judgement using your comprehensive biological knowledge and systems understanding. The goal is as follows: {}".format(instruction)
             gpt_evaluation = ask_gpt(gpt_input, gpt_prompt, model, client)
-            output_len = len(gpt_evaluation)
 
             print(gpt_evaluation)
             total_cost += get_cost_for_one_eval(model)
-            
         
             iPPI_helpfullness = float(gpt_evaluation) / 100.0 / float(n_rep_avg)
             reps += 1
@@ -167,7 +164,7 @@ def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
     search_tree = [10, 5, 3, 1]
     model = "gpt-4-1106-preview"
-    n_rep_avg = 6
+    n_rep_avg = 8
 
     edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
     user_approval = True if input("Cost Will be projected to {} USD for this analysis. Proceed? y/n + Enter:".format(len(edges_to_evaluate) * n_rep_avg * get_cost_for_one_eval(model))) == "y" else False
