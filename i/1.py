@@ -28,21 +28,35 @@ def get_HuRI_table_as_edge_list():
         return edge_list
 
 def from_nx_to_spektral(G):
-    A = nx.adjacency_matrix(G)
+    node_mapping = {node: i for i, node in enumerate(G.nodes())}
+    numeric_edges = np.array([(node_mapping[u], node_mapping[v]) for u, v in G.edges()])
 
-    # Extract node features
-    # Assuming each node has the same number of features
-    num_nodes = G.number_of_nodes()
-    features = [print(G.nodes[key]['feature']) for key in G.nodes()]
-    X = np.array(features)
+    # Extract node and edge features
+    node_features = np.array([G.nodes[node]['features'] for node in G.nodes()])
+    edge_features = np.array([G.edges[edge]['features'] for edge in G.edges()])
 
-    # Create a Spektral graph
-    graph = spektral.data.Graph(x=X, a=A)
+    # Create adjacency matrix
+    adjacency_matrix = nx.adjacency_matrix(G, nodelist=node_mapping.keys())
+    print(adjacency_matrix)
+
+    # Create Spektral graph
+    graph = spektral.data.Graph(x=node_features, a=adjacency_matrix, e=edge_features, edges=numeric_edges)
     return graph
 
 def get_graph(edge_list):
     G = nx.Graph()
     G.add_edges_from(edge_list)
+
+    # Assign random features to nodes
+    mean, std_dev = 0, 1  # Mean and standard deviation for normal distribution
+
+    for node in G.nodes():
+        G.nodes[node]['features'] = np.random.normal(mean, std_dev, 2)
+
+    # Assign random features to edges
+    for edge in G.edges():
+        G.edges[edge]['features'] = np.random.normal(mean, std_dev, 2)
+
     return G
 
 def get_edgelist():
@@ -56,4 +70,7 @@ def get_edgelist():
 ensg_edges = get_HuRI_table_as_edge_list()
 
 graph = get_graph(ensg_edges)
+
+graph_next = update(graph)
+
 from_nx_to_spektral(graph)
