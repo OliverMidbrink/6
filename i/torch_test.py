@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import numpy as np
 from torch_geometric.nn import GCNConv
+import matplotlib.pyplot as plt
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
@@ -93,8 +94,14 @@ def main():
     node_features, edge_index, edge_features = to_pytorch_from_nx(graph)
 
 
-    node_features, edge_index, edge_features = run_timestep_model(node_features, edge_index, edge_features)
 
+    plt.plot(node_features.cpu().numpy())
+
+    for x in range(10):
+        node_features, edge_index, edge_features = run_timestep_model(node_features, edge_index, edge_features)
+        plt.plot(node_features.cpu().numpy())
+    
+    plt.show()
 
 if __name__ == "__main__":
     main()
