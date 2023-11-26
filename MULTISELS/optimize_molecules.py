@@ -67,7 +67,7 @@ def main():
                 iPPI_prob = iPPI_prob[0][0]
                 print(iPPI_prob)
                 data.append({"iPPI": float(tuple[2]), "iPPI_prob": float(iPPI_prob)})
-                smile_score += iPPI_prob * tuple[2]
+                smile_score += (iPPI_prob - 0.5) * tuple[2]
                 #print("Added {} to score.".format(iPPI_prob * tuple[2]))
             else:
                 print("Could not analyze")
