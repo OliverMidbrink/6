@@ -8,16 +8,27 @@ import os
 import numpy as np
 from torch_geometric.nn import GCNConv
 import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
 
+def update_plot(iteration, node_features_history):
+    plt.clf()  # Clear the previous plot
+    plt.plot(node_features_history[iteration])
+    plt.title(f'Iteration {iteration}')
+    plt.xlabel('Index')
+    plt.ylabel('Node Features')
+    plt.show()
+
 def run_timestep_model(node_features, edge_index, edge_features):
     
     neighbor_sum = torch.zeros_like(node_features).to(device)
+    ones_tensor = torch.tensor(1, dtype=node_features.dtype).to(device)
     for i in range(edge_index.size(1)):
         src, dst = edge_index[0, i], edge_index[1, i]
-        neighbor_sum[dst] += node_features[src] * edge_features[i]
+        neighbor_sum[dst] += (node_features[src] - ones_tensor) * edge_features[i]
 
     # Update node features
     new_node_features = node_features + neighbor_sum
@@ -51,15 +62,12 @@ def get_HuRI_graph():
     G = nx.Graph()
     G.add_edges_from(edge_list)
 
-    # Assign random features to nodes
-    mean, std_dev = 0, 1  # Mean and standard deviation for normal distribution
-
     for node in G.nodes():
-        G.nodes[node]['features'] = np.random.normal(mean, std_dev, 1)
+        G.nodes[node]['features'] = np.random.normal(1, 0.01, 1)
 
     # Assign random features to edges
     for edge in G.edges():
-        G.edges[edge]['features'] = np.random.normal(mean, std_dev, 1)
+        G.edges[edge]['features'] = np.random.normal(0, 0.2, 1)
 
     return G
 
@@ -93,15 +101,16 @@ def main():
     graph = get_HuRI_graph()
     node_features, edge_index, edge_features = to_pytorch_from_nx(graph)
 
+    node_features_history = []
 
+    # Initial plot
+    data = node_features.cpu().numpy()
+    print(data)
 
-    plt.plot(node_features.cpu().numpy())
-
-    for x in range(10):
+    for x in range(4):
         node_features, edge_index, edge_features = run_timestep_model(node_features, edge_index, edge_features)
-        plt.plot(node_features.cpu().numpy())
-    
-    plt.show()
+        data = node_features.cpu().numpy()
+        print(data)
 
 if __name__ == "__main__":
     main()
