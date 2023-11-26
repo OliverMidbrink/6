@@ -6,6 +6,7 @@ from tqdm import tqdm
 import pandas as pd
 import os
 import numpy as np
+from torch_geometric.nn import GCNConv
 
 def get_HuRI_table_as_edge_list():
     if os.path.exists("i/HuRI_ENSG_EDGELIST.json"):
@@ -48,7 +49,7 @@ def get_HuRI_graph():
 
 def to_pytorch_from_nx(G):
     # Convert node features to a tensor
-    node_features = torch.tensor([G.nodes[node]['features'] for node in G.nodes()])
+    node_features = torch.tensor(np.array([G.nodes[node]['features'] for node in G.nodes()]))
 
     # Convert edges to a tensor (edge index)
     edge_list = [(u, v) for u, v in G.edges()]
@@ -63,11 +64,11 @@ def to_pytorch_from_nx(G):
     edge_index = torch.tensor(numeric_edge_list, dtype=torch.long).t().contiguous()
 
     # If your graph has edge features
-    edge_features = torch.tensor([G[u][v]['features'] for u, v in G.edges()])
+    edge_features = torch.tensor(np.array([G[u][v]['features'] for u, v in G.edges()]))
 
-    print("Node Features:\n", node_features)
-    print("Edge Index:\n", edge_index)
-    print("Edge Features:\n", edge_features)
+    #print("Node Features:\n", node_features)
+    #print("Edge Index:\n", edge_index)
+    #print("Edge Features:\n", edge_features)
 
     return node_features, edge_index, edge_features
 
