@@ -4,3 +4,4 @@ pubchem_assays/
 *.DS_Store*
 .vscode
 __pycache__
+cache

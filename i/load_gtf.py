@@ -3,7 +3,7 @@ import gzip
 import json
 
 # Path to your GTF file
-gtf_file = 'data/transcriptomes/Homo_sapiens.GRCh38.110.gtf.gz'
+gtf_file = 'data/Homo_sapiens.GRCh38.110.gtf.gz'
 
 # Define the column names (GTF format specification)
 col_names = ['seqname', 'source', 'feature', 'start', 'end', 'score', 'strand', 'frame', 'attribute']
