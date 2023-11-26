@@ -23,7 +23,7 @@ def ask_gpt(input_text, prompt, model, client):
             {"role": "user", "content": input_text}
         ],
         model=model,
-        temperature=0.8,
+        temperature=0.0,
         timeout=10,
     )
     return gpt_response.choices[0].message.content
@@ -81,7 +81,7 @@ def evaluate_edge_helpfullness(edge, instruction, n_rep_avg, client, model):
             print(gpt_evaluation)
             total_cost += get_cost_for_one_eval(model)
         
-            iPPI_helpfullness = float(gpt_evaluation) / 100.0 / float(n_rep_avg)
+            iPPI_helpfullness += float(gpt_evaluation) / 100.0 / float(n_rep_avg)
             reps += 1
         except Exception as e:
             failed_attemps += 1
@@ -162,9 +162,9 @@ def get_eval_edges(tree_n: list, interesting_uniprot_ids: list):
 
 def main():
     interesting_uniprot_ids = ["Q01860", "Q06416", "P48431", "O43474"]
-    search_tree = [3, 2, 1]
+    search_tree = [40, 17, 7]
     model = "gpt-4-1106-preview"
-    n_rep_avg = 8
+    n_rep_avg = 1
 
     edges_to_evaluate = get_eval_edges(search_tree, interesting_uniprot_ids)
     user_approval = True if input("Cost Will be projected to {} USD for this analysis. Proceed? y/n + Enter:".format(len(edges_to_evaluate) * n_rep_avg * get_cost_for_one_eval(model))) == "y" else False
@@ -172,7 +172,7 @@ def main():
         print("Okay. Then aborting. ")
         sys.exit(0)
     print("Proceeding with analysis.")
-    json = evaluate_edges(edges_to_evaluate, model=model, n_rep_avg=n_rep_avg, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/latest_gpt-4_output.json")
+    json = evaluate_edges(edges_to_evaluate, model=model, n_rep_avg=n_rep_avg, interesting_uniprot_ids=interesting_uniprot_ids, search_tree=search_tree, file_name="MULTISELS/good_exp_gpt-4_output_1_hot_no_temp.json")
 
 
     sys.exit(0)
