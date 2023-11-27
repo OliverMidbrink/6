@@ -97,7 +97,7 @@ def predict(graphs, model):
     dataset = PredDataset(graphs=graphs)
     loader = DisjointLoader(dataset, batch_size=1, epochs=1)
 
-    y = model.predict(loader.load(), verbose=0)
+    y = model.predict(loader.load())
     return y
 
 def main():
