@@ -6,7 +6,7 @@ export default function Multisels() {
     <main className="flex min-h-screen flex-col items-center justify-between p-16 pt-2 lg:p-24">
       <div className="relative text-6xl lg:text-8xlflex place-items-center before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
           <div className='container pt-8'>
-            <div><h2 className={`mb-3 text-6xl lg:text-8xl p-6 lg:p-6 pt-8 font-semibold`}>Molytica M{' '}</h2></div>
+            <div><h2 className={`mb-3 text-4xl lg:text-8xl p-6 lg:p-6 pt-8 font-semibold`}>Molytica M{' '}</h2></div>
             <div className='box'><p className={`m-0 max-w-[30ch] text-2xl opacity-50`}>ChatGPT4 and Biologically Tailored AI Solutions Dancing in Harmony to Discover Innovative Lead Molecules. Medically verified.</p></div>
           </div>
       </div>
