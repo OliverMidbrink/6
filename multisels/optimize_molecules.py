@@ -18,7 +18,7 @@ def get_smiles():
 def main():
     PPI_valuations = get_targets_iPPIs("MULTISELS/OSK_upreg_2_neighbors_chatGPT3_turpo_1106.json")
 
-    data_path = os.path.join("data", "multisel_output")
+    data_path = os.path.join("data", "multisels_output")
     if not os.path.exists(data_path):
         os.makedirs(data_path)
     with open(os.path.join(data_path, "eval_PPIs.json"), "w") as file:
