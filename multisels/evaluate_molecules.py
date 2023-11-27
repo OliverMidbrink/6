@@ -15,14 +15,30 @@ def get_smiles():
     return sorted(list(smiles))
 
 
+def get_smiles_iPPI_DB():
+    with open("iPPI-DB.json", "r") as file:
+        json_data = json.load(file)
+
+    
+
+    return sorted(list(smiles))
+
+
 def main():
-    PPI_valuations = get_targets_iPPIs("MULTISELS/OSK_upreg_2_neighbors_chatGPT3_turpo_1106.json")
+    PPI_valuations = get_targets_iPPIs("multisels/OSK_upreg_2_neighbors_chatGPT3_turpo_1106.json")
 
     data_path = os.path.join("data", "multisels_output")
     if not os.path.exists(data_path):
         os.makedirs(data_path)
+    
+    iPPI_valuations = []
+    for PPI in PPI_valuations:
+        iPPI_valuations.append(PPI[2])
     with open(os.path.join(data_path, "eval_PPIs.json"), "w") as file:
         json.dump({"eval_PPIs": PPI_valuations}, file)
+        
+    with open(os.path.join(data_path, "iPPI_evaluations.json"), "w") as file:
+        json.dump({"iPPI_evaluations": iPPI_valuations}, file)
 
     model = get_model()
     smiles = get_smiles()
