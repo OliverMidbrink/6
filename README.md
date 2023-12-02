@@ -24,3 +24,5 @@ pip install tensorflow==2.11
 If you see an empty array it did not work. If you see an array that contains GPU info. It worked. Congrats!
 
 Cheers and have a nice day :)
+
+New software on https://github.com/Molytica/M
